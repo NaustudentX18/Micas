@@ -1,0 +1,128 @@
+:root {
+  /* Background */
+  --color-bg: #0a0a0f;
+  --color-surface: #111118;
+  --color-surface-2: #1a1a25;
+
+  /* Glass layers */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-bg-hover: rgba(255, 255, 255, 0.09);
+  --glass-bg-active: rgba(255, 255, 255, 0.12);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-border-strong: rgba(255, 255, 255, 0.18);
+  --glass-blur: blur(20px) saturate(180%);
+  --glass-blur-heavy: blur(40px) saturate(200%);
+  --glass-blur-light: blur(12px);
+
+  /* Accent palette */
+  --color-accent: #6c8aff;
+  --color-accent-2: #a46cff;
+  --color-accent-glow: rgba(108, 138, 255, 0.25);
+  --color-accent-glow-strong: rgba(108, 138, 255, 0.45);
+
+  /* Status colors */
+  --color-success: #34d399;
+  --color-success-glow: rgba(52, 211, 153, 0.25);
+  --color-warning: #fbbf24;
+  --color-warning-glow: rgba(251, 191, 36, 0.25);
+  --color-error: #f87171;
+  --color-error-glow: rgba(248, 113, 113, 0.25);
+  --color-info: #60a5fa;
+  --color-info-glow: rgba(96, 165, 250, 0.25);
+
+  /* Text */
+  --color-text: rgba(255, 255, 255, 0.92);
+  --color-text-muted: rgba(255, 255, 255, 0.50);
+  --color-text-dim: rgba(255, 255, 255, 0.30);
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-card: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+  --shadow-accent: 0 0 24px var(--color-accent-glow);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+/* Core glass panel */
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius-card);
+}
+
+.glass-panel--elevated {
+  background: var(--glass-bg-elevated);
+  border-color: var(--glass-border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.glass-panel--heavy {
+  backdrop-filter: var(--glass-blur-heavy);
+  -webkit-backdrop-filter: var(--glass-blur-heavy);
+}
+
+/* Interactive glass surfaces */
+.glass-interactive {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius-card);
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  cursor: pointer;
+}
+
+.glass-interactive:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-strong);
+}
+
+.glass-interactive:active {
+  background: var(--glass-bg-active);
+  transform: scale(0.99);
+}
+
+/* Accent glow effect */
+.glow-accent {
+  box-shadow: var(--shadow-accent);
+}
+
+/* Divider */
+.glass-divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: var(--space-4) 0;
+}
+
+/* Inset area (darker recessed panel) */
+.glass-inset {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-md);
+}

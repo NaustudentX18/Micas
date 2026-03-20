@@ -1,4 +1,4 @@
-const CACHE_NAME = 'micas-shell-v1';
+const CACHE_NAME = 'micas-shell-v2';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -34,6 +34,7 @@ const PRECACHE_ASSETS = [
   '/js/components/toast.component.js',
   '/js/components/modal.component.js',
   '/js/components/validation-panel.component.js',
+  '/js/utils/mobile.js',
   '/js/ai/ai.interface.js',
   '/js/ai/ai.manager.js',
   '/js/ai/openrouter.provider.js',

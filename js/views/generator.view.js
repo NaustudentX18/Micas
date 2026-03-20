@@ -7,6 +7,7 @@ import skeleton from '../components/skeleton.component.js';
 import { pipelineNav } from './_pipeline.js';
 import partsStore from '../db/parts.store.js';
 import projectsStore from '../db/projects.store.js';
+import { haptic, attachKeyboardScrolling } from '../utils/mobile.js';
 
 const generatorView = {
   _selectedId: null,
@@ -60,6 +61,7 @@ const generatorView = {
     // Bind tile clicks
     container.querySelectorAll('.generator-tile').forEach(tile => {
       tile.addEventListener('click', () => {
+        haptic('light');
         this._selectedId = tile.dataset.id;
         container.querySelectorAll('.generator-tile').forEach(t => t.classList.remove('selected'));
         tile.classList.add('selected');
@@ -137,9 +139,15 @@ const generatorView = {
         });
       });
 
+      // Attach keyboard scroll avoidance for param inputs
+      attachKeyboardScrolling(paramsArea);
+
       if (generateBtn) {
         generateBtn.disabled = false;
-        generateBtn.addEventListener('click', () => this._generate(container, projectId, gen));
+        generateBtn.addEventListener('click', () => {
+          haptic('medium');
+          this._generate(container, projectId, gen);
+        });
       }
     } catch (e) {
       paramsArea.innerHTML = `<p class="text-error mt-4">Failed to load generator: ${e.message}</p>`;
@@ -185,8 +193,9 @@ const generatorView = {
         <div class="form-group mb-4">
           <label class="form-label" for="${id}">${field.label}</label>
           <div class="input-unit-wrapper">
-            <input class="input" type="number" id="${id}" data-param="${field.id}"
-              value="${value ?? field.default}" min="${field.min ?? ''}" max="${field.max ?? ''}" step="${field.step ?? 'any'}">
+            <input class="input" type="number" inputmode="decimal" id="${id}" data-param="${field.id}"
+              value="${value ?? field.default}" min="${field.min ?? ''}" max="${field.max ?? ''}"
+              step="${field.step ?? 'any'}" autocomplete="off" enterkeyhint="done">
             ${field.unit ? `<span class="input-unit">${field.unit}</span>` : ''}
           </div>
           ${field.description ? `<p class="form-hint">${field.description}</p>` : ''}

@@ -5,6 +5,7 @@ import engine from '../questions/question.engine.js';
 import toast from '../components/toast.component.js';
 import { pipelineNav } from './_pipeline.js';
 import partsStore from '../db/parts.store.js';
+import { haptic, scrollInputIntoView } from '../utils/mobile.js';
 
 const questionsView = {
   _currentQuestion: null,
@@ -28,7 +29,6 @@ const questionsView = {
     const confidence = progress.confidence;
 
     if (!q || confidence >= 80) {
-      // Done! Navigate to brief
       state.set('answers', this._engine.getAnswers());
       this._savePart(projectId);
       router.navigate(`/project/${projectId}/brief`);
@@ -38,105 +38,154 @@ const questionsView = {
     this._currentQuestion = q;
 
     const pct = Math.min((progress.answered / Math.max(progress.total, 1)) * 100, 95);
+    const isSelectType = q.type === 'select' || q.type === 'boolean';
 
     container.innerHTML = `
       <div class="page page-enter">
         ${pipelineNav('questions', projectId)}
         <div class="page-header">
-          <div class="flex-between mb-2">
+          <div class="flex-between mb-3">
             <h2>Questions</h2>
-            <span class="badge badge-accent">${Math.round(confidence)}% confident</span>
+            <span class="badge badge-accent">${Math.round(confidence)}% ready</span>
           </div>
           <div class="progress-bar">
             <div class="progress-fill" style="width:${pct}%"></div>
           </div>
-          <p class="text-xs text-dim mt-2">${progress.answered} of ~${progress.total} questions answered</p>
+          <p class="text-xs text-dim mt-2">${progress.answered} of ~${progress.total} answered</p>
         </div>
 
-        <div class="glass-panel p-6 mb-6" id="question-card">
-          <div class="badge badge-muted mb-4" style="text-transform:capitalize">${q.category}</div>
-          <h3 class="mb-5" style="font-size:1.25rem;line-height:1.4">${q.text}</h3>
+        <div class="glass-panel p-5 mb-5" id="question-card">
+          <div class="badge badge-muted mb-3" style="text-transform:capitalize">${q.category}</div>
+          <h3 style="font-size:1.25rem;line-height:1.45;margin-bottom:var(--space-5)">${q.text}</h3>
 
           <div id="answer-area">
             ${this._renderAnswerInput(q)}
           </div>
 
-          <div class="flex gap-3 mt-6">
-            <button class="btn btn-primary flex-1 btn-lg" id="answer-btn">Next →</button>
-            <button class="btn btn-glass" id="skip-btn" title="Skip this question">Skip</button>
-          </div>
+          ${!isSelectType ? `
+            <div class="flex gap-3 mt-5">
+              <button class="btn btn-primary flex-1 btn-lg" id="answer-btn">Next</button>
+              <button class="btn btn-glass" id="skip-btn">Skip</button>
+            </div>
+          ` : `
+            <button class="btn btn-glass btn-sm mt-4" id="skip-btn" style="align-self:flex-start">Skip this question</button>
+          `}
         </div>
 
         ${confidence >= 60 ? `
-          <div class="glass-panel p-4 flex gap-3 items-center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-            <div>
-              <div class="text-sm font-semibold" style="color:var(--color-success)">Good enough to generate</div>
-              <div class="text-xs text-muted">You can skip remaining questions and generate now.</div>
+          <div class="glass-panel p-4 flex gap-3 items-center" style="border-color:rgba(52,211,153,0.25)">
+            <span style="font-size:1.5rem">✓</span>
+            <div class="flex-1">
+              <div class="font-semibold" style="color:var(--color-success);margin-bottom:2px">Ready to generate</div>
+              <div class="text-xs text-muted">You have enough info. Generate now or keep answering.</div>
             </div>
-            <button class="btn btn-glass btn-sm" id="generate-now-btn">Generate Now</button>
+            <button class="btn btn-sm" id="generate-now-btn"
+              style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);color:var(--color-success);flex-shrink:0">
+              Go →
+            </button>
           </div>
         ` : ''}
       </div>
     `;
 
-    container.querySelector('#answer-btn').addEventListener('click', () => this._submitAnswer(container, projectId, false));
-    container.querySelector('#skip-btn').addEventListener('click', () => this._submitAnswer(container, projectId, true));
+    // Tap a select/boolean option → auto-advance after brief delay for visual feedback
+    if (isSelectType) {
+      container.querySelectorAll('[name="q-answer"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          haptic('light');
+          container.querySelectorAll('.toggle-label').forEach(l => l.style.transition = 'all 0.15s ease');
+          setTimeout(() => this._submitAnswer(container, projectId, false), 220);
+        });
+      });
+    } else {
+      container.querySelector('#answer-btn')?.addEventListener('click', () => {
+        haptic('medium');
+        this._submitAnswer(container, projectId, false);
+      });
+    }
+
+    container.querySelector('#skip-btn')?.addEventListener('click', () => {
+      haptic('light');
+      this._submitAnswer(container, projectId, true);
+    });
+
     container.querySelector('#generate-now-btn')?.addEventListener('click', () => {
+      haptic('success');
       state.set('answers', this._engine.getAnswers());
       this._savePart(projectId);
       router.navigate(`/project/${projectId}/brief`);
     });
 
-    // Enter key submits
+    // Enter key submits for text/number inputs
     container.querySelector('#answer-area')?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-        container.querySelector('#answer-btn').click();
+        container.querySelector('#answer-btn')?.click();
       }
     });
 
-    // Auto-focus first input
-    requestAnimationFrame(() => {
-      const first = container.querySelector('input, select');
-      first?.focus();
-    });
+    // Auto-focus first input (with scroll into view for iOS)
+    if (!isSelectType) {
+      requestAnimationFrame(() => {
+        const first = container.querySelector('input:not([type="radio"]), select');
+        if (first) {
+          first.focus();
+          scrollInputIntoView(first, 400);
+        }
+      });
+    }
   },
 
   _renderAnswerInput(q) {
     if (q.type === 'select') {
       return `
-        <div class="toggle-group" role="radiogroup">
+        <div class="toggle-group" role="radiogroup" style="flex-direction:column;gap:var(--space-2)">
           ${q.options.map(opt => `
-            <input type="radio" name="q-answer" id="opt-${opt.value}" value="${opt.value}" class="toggle-option">
-            <label for="opt-${opt.value}" class="toggle-label">${opt.label}</label>
+            <div style="display:flex">
+              <input type="radio" name="q-answer" id="opt-${opt.value}" value="${opt.value}" class="toggle-option">
+              <label for="opt-${opt.value}" class="toggle-label" style="width:100%;justify-content:flex-start;border-radius:var(--radius-md)">${opt.label}</label>
+            </div>
           `).join('')}
         </div>
       `;
     }
     if (q.type === 'boolean') {
       return `
-        <div class="toggle-group" role="radiogroup">
-          <input type="radio" name="q-answer" id="opt-yes" value="true" class="toggle-option">
-          <label for="opt-yes" class="toggle-label">Yes</label>
-          <input type="radio" name="q-answer" id="opt-no" value="false" class="toggle-option">
-          <label for="opt-no" class="toggle-label">No</label>
+        <div class="toggle-group" role="radiogroup" style="gap:var(--space-3)">
+          <div style="flex:1">
+            <input type="radio" name="q-answer" id="opt-yes" value="true" class="toggle-option">
+            <label for="opt-yes" class="toggle-label" style="width:100%;justify-content:center;border-radius:var(--radius-md)">
+              <span style="font-size:1.25rem;margin-right:6px">✓</span> Yes
+            </label>
+          </div>
+          <div style="flex:1">
+            <input type="radio" name="q-answer" id="opt-no" value="false" class="toggle-option">
+            <label for="opt-no" class="toggle-label" style="width:100%;justify-content:center;border-radius:var(--radius-md)">
+              <span style="font-size:1.25rem;margin-right:6px">✗</span> No
+            </label>
+          </div>
         </div>
       `;
     }
     if (q.type === 'number') {
       return `
         <div class="input-unit-wrapper">
-          <input class="input" id="q-input" type="number" placeholder="${q.placeholder || ''}"
-            min="${q.min || ''}" max="${q.max || ''}" step="${q.step || 'any'}">
+          <input class="input" id="q-input" type="number" inputmode="decimal"
+            placeholder="${q.placeholder || 'Enter value'}"
+            min="${q.min || ''}" max="${q.max || ''}" step="${q.step || 'any'}"
+            enterkeyhint="done" autocomplete="off">
           ${q.unit ? `<span class="input-unit">${q.unit}</span>` : ''}
         </div>
         ${q.description ? `<p class="form-hint mt-2">${q.description}</p>` : ''}
       `;
     }
     if (q.type === 'text') {
-      return `<input class="input" id="q-input" type="text" placeholder="${q.placeholder || ''}">`;
+      return `
+        <input class="input" id="q-input" type="text"
+          placeholder="${q.placeholder || 'Type your answer'}"
+          enterkeyhint="done" autocomplete="off">
+      `;
     }
-    return `<input class="input" id="q-input" type="text">`;
+    return `<input class="input" id="q-input" type="text" enterkeyhint="done">`;
   },
 
   _getAnswerValue(container) {
@@ -145,7 +194,6 @@ const questionsView = {
       const checked = container.querySelector('[name="q-answer"]:checked');
       if (!checked) return null;
       if (q.type === 'boolean') return checked.value === 'true';
-      // Try numeric conversion for numeric option values
       const v = checked.value;
       return isNaN(parseFloat(v)) ? v : parseFloat(v);
     }
@@ -160,7 +208,8 @@ const questionsView = {
     if (!skip) {
       const value = this._getAnswerValue(container);
       if (value === null || value === '') {
-        toast.warning('Please answer the question or tap Skip.');
+        toast.warning('Please answer or tap Skip.');
+        haptic('error');
         return;
       }
       this._engine.recordAnswer(this._currentQuestion.id, value);

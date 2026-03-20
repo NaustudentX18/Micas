@@ -81,13 +81,17 @@ const exportView = {
         <div class="export-grid mb-4">
           <button class="export-btn" id="exp-stl" ${!mesh ? 'disabled style="opacity:0.4"' : ''}>
             <span class="export-btn-icon">📐</span>
-            <span class="export-btn-label">STL (Binary)</span>
-            <span class="export-btn-sub">For slicers (Bambu, Prusa, Cura)</span>
+            <span class="export-btn-text">
+              <span class="export-btn-label">STL File</span>
+              <span class="export-btn-sub">For Bambu, Prusa, Cura</span>
+            </span>
           </button>
           <button class="export-btn" id="exp-scad">
             <span class="export-btn-icon">📝</span>
-            <span class="export-btn-label">OpenSCAD</span>
-            <span class="export-btn-sub">Editable parametric source</span>
+            <span class="export-btn-text">
+              <span class="export-btn-label">OpenSCAD</span>
+              <span class="export-btn-sub">Editable parametric source</span>
+            </span>
           </button>
         </div>
 
@@ -95,13 +99,17 @@ const exportView = {
         <div class="export-grid mb-4">
           <button class="export-btn" id="exp-bambu">
             <span class="export-btn-icon">🔵</span>
-            <span class="export-btn-label">Bambu Sheet</span>
-            <span class="export-btn-sub">Print settings JSON</span>
+            <span class="export-btn-text">
+              <span class="export-btn-label">Bambu Sheet</span>
+              <span class="export-btn-sub">Print settings JSON</span>
+            </span>
           </button>
           <button class="export-btn" id="exp-makerworld">
             <span class="export-btn-icon">🌍</span>
-            <span class="export-btn-label">MakerWorld Draft</span>
-            <span class="export-btn-sub">Listing markdown</span>
+            <span class="export-btn-text">
+              <span class="export-btn-label">MakerWorld Draft</span>
+              <span class="export-btn-sub">Listing markdown</span>
+            </span>
           </button>
         </div>
 
@@ -109,18 +117,24 @@ const exportView = {
         <div class="export-grid mb-4">
           <button class="export-btn" id="exp-params">
             <span class="export-btn-icon">⚙️</span>
-            <span class="export-btn-label">Parametric JSON</span>
-            <span class="export-btn-sub">Re-importable design spec</span>
+            <span class="export-btn-text">
+              <span class="export-btn-label">Parametric JSON</span>
+              <span class="export-btn-sub">Re-importable design spec</span>
+            </span>
           </button>
           <button class="export-btn" id="exp-summary">
             <span class="export-btn-icon">📋</span>
-            <span class="export-btn-label">Job Summary</span>
-            <span class="export-btn-sub">Human-readable report</span>
+            <span class="export-btn-text">
+              <span class="export-btn-label">Job Summary</span>
+              <span class="export-btn-sub">Human-readable report</span>
+            </span>
           </button>
           <button class="export-btn" id="exp-confidence">
             <span class="export-btn-icon">🎯</span>
-            <span class="export-btn-label">Confidence Report</span>
-            <span class="export-btn-sub">AI assumptions & gaps</span>
+            <span class="export-btn-text">
+              <span class="export-btn-label">Confidence Report</span>
+              <span class="export-btn-sub">AI assumptions & gaps</span>
+            </span>
           </button>
         </div>
 

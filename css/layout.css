@@ -5,7 +5,8 @@
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  /* Bottom padding = nav bar height + safe area + breathing room */
+  padding-bottom: calc(76px + env(safe-area-inset-bottom));
 }
 
 .app-nav {
@@ -19,15 +20,15 @@
 
 /* Page layout */
 .page {
-  min-height: calc(100vh - 72px - env(safe-area-inset-bottom));
+  min-height: calc(100svh - 76px - env(safe-area-inset-bottom));
   padding: var(--space-4);
-  padding-top: calc(var(--space-6) + env(safe-area-inset-top));
+  padding-top: calc(var(--space-5) + env(safe-area-inset-top));
   max-width: 640px;
   margin: 0 auto;
 }
 
 .page-header {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
 }
 
 .page-header h1 {
@@ -47,7 +48,7 @@
   margin-bottom: var(--space-3);
 }
 
-/* Grid layouts */
+/* Grid layouts – mobile-first */
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -64,6 +65,12 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: var(--space-3);
+}
+
+/* Stack grids on very small phones */
+@media (max-width: 380px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr; }
 }
 
 /* Flex utilities */
@@ -141,8 +148,10 @@
   align-items: center;
   gap: var(--space-2);
   overflow-x: auto;
-  padding: var(--space-2) 0;
+  padding: var(--space-3) 0;
   scrollbar-width: none;
+  /* Prevent accidentally triggering nav swipe while scrolling steps */
+  overscroll-behavior-x: contain;
 }
 .pipeline-steps::-webkit-scrollbar { display: none; }
 .pipeline-step {
@@ -152,17 +161,35 @@
   flex-shrink: 0;
 }
 .pipeline-step-dot {
-  width: 8px; height: 8px;
+  width: 10px; height: 10px;
   border-radius: 50%;
   background: var(--glass-border);
-  transition: background var(--transition-base);
+  transition: background var(--transition-base), box-shadow var(--transition-base);
 }
-.pipeline-step.active .pipeline-step-dot { background: var(--color-accent); box-shadow: 0 0 8px var(--color-accent-glow); }
+.pipeline-step.active .pipeline-step-dot {
+  background: var(--color-accent);
+  box-shadow: 0 0 10px var(--color-accent-glow);
+}
 .pipeline-step.done .pipeline-step-dot { background: var(--color-success); }
-.pipeline-step-label { font-size: 0.75rem; color: var(--color-text-dim); }
-.pipeline-step.active .pipeline-step-label { color: var(--color-accent); font-weight: 500; }
+.pipeline-step-label { font-size: 0.8125rem; color: var(--color-text-dim); white-space: nowrap; }
+.pipeline-step.active .pipeline-step-label { color: var(--color-accent); font-weight: 600; }
 .pipeline-step.done .pipeline-step-label { color: var(--color-text-muted); }
 .pipeline-connector { width: 16px; height: 1px; background: var(--glass-border); flex-shrink: 0; }
+
+/* Landscape phone: reduce vertical padding */
+@media (max-height: 500px) and (orientation: landscape) {
+  .page {
+    padding-top: calc(var(--space-3) + env(safe-area-inset-top));
+  }
+  .page-header { margin-bottom: var(--space-3); }
+  .app-main {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  }
+  .app-nav {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
 
 /* Responsive: wider screens get sidebar layout */
 @media (min-width: 768px) {

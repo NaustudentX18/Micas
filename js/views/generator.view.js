@@ -27,6 +27,7 @@ const generatorView = {
   _renderTypeSelector(container, projectId) {
     const v1 = GENERATOR_LIST.filter(g => g.category === 'v1');
     const v2 = GENERATOR_LIST.filter(g => g.category === 'v2');
+    const v3 = GENERATOR_LIST.filter(g => g.category === 'v3');
 
     container.innerHTML = `
       <div class="page page-enter">
@@ -44,6 +45,10 @@ const generatorView = {
           <div class="page-section-title mt-4">Precision Parts (V2)</div>
           <div class="generator-grid">
             ${v2.map(g => this._tileHTML(g)).join('')}
+          </div>
+          <div class="page-section-title mt-4">Hardware &amp; Routing (V3)</div>
+          <div class="generator-grid">
+            ${v3.map(g => this._tileHTML(g)).join('')}
           </div>
         </div>
 
@@ -85,7 +90,7 @@ const generatorView = {
         aria-label="${g.label}: ${g.description}">
         <span class="generator-tile-icon">${g.icon}</span>
         <span class="generator-tile-label">${g.label}</span>
-        ${g.category === 'v2' ? '<span class="badge badge-ai" style="font-size:0.6rem">V2</span>' : ''}
+        ${g.category === 'v2' ? '<span class="badge badge-ai" style="font-size:0.6rem">V2</span>' : g.category === 'v3' ? '<span class="badge badge-success" style="font-size:0.6rem">V3</span>' : ''}
       </div>
     `;
   },

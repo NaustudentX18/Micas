@@ -1,4 +1,4 @@
-const CACHE_NAME = 'micas-shell-v2';
+const CACHE_NAME = 'micas-shell-v3';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -17,6 +17,7 @@ const PRECACHE_ASSETS = [
   '/js/db/projects.store.js',
   '/js/db/parts.store.js',
   '/js/db/settings.store.js',
+  '/js/views/_pipeline.js',
   '/js/views/dashboard.view.js',
   '/js/views/intake.view.js',
   '/js/views/questions.view.js',

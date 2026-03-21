@@ -188,14 +188,17 @@ const intake = {
       // Save to DB
       try {
         let partId = state.get('currentPartId');
+        let projectUpdates = { status: 'questions' };
         if (partId) {
           await partsStore.update(partId, { intake: intakeData });
         } else {
           const part = await partsStore.create(id, { name: description.slice(0, 40), intake: intakeData });
           state.set('currentPartId', part.id);
-          partId = part.id;
+          // Update project part count when creating a new part
+          const allParts = await partsStore.getByProject(id);
+          projectUpdates.partCount = allParts.length;
         }
-        await projectsStore.update(id, { status: 'questions' });
+        await projectsStore.update(id, projectUpdates);
       } catch (e) {
         console.warn('Could not save intake:', e);
       }

@@ -258,8 +258,296 @@ export function cone(bottomRadius, topRadius, height, segments = 24) {
  * Rounded box (basic — box with separate cap geometry for corners).
  * For simplicity, returns a regular box; corner rounding can be added later.
  */
-export function roundedBox(w, d, h) {
-  return box(w, d, h);
+/**
+ * Box with chamfered (beveled) edges.
+ * @param {number} w width  @param {number} d depth  @param {number} h height
+ * @param {number} r chamfer radius (clamped to min dimension / 2)
+ * @param {number} segs segments per quarter-circle (min 2)
+ */
+export function roundedBox(w = 20, d = 20, h = 20, r = 2, segs = 4) {
+  // Clamp r so it doesn't exceed any half-dimension
+  r = Math.min(r, w / 2, d / 2, h / 2);
+  segs = Math.max(2, segs);
+
+  const m = new Mesh();
+  const hw = w / 2, hd = d / 2, hh = h / 2;
+
+  // Corner centers (8 corners of the inner box)
+  const cx = hw - r, cy = hd - r, cz = hh - r;
+
+  // Build corner arc points for each of 8 corners
+  // Each corner gets (segs+1)*(segs+1) vertices on its quarter-sphere
+  const corners = [
+    [ cx,  cy,  cz], // 0 +++ top-front-right
+    [-cx,  cy,  cz], // 1 -++ top-front-left
+    [-cx, -cy,  cz], // 2 --+ top-back-left
+    [ cx, -cy,  cz], // 3 +-+ top-back-right
+    [ cx,  cy, -cz], // 4 ++- bottom-front-right
+    [-cx,  cy, -cz], // 5 -+- bottom-front-left
+    [-cx, -cy, -cz], // 6 --- bottom-back-left
+    [ cx, -cy, -cz], // 7 +-- bottom-back-right
+  ];
+  // Sign of arc direction per corner
+  const signs = [
+    [ 1,  1,  1],
+    [-1,  1,  1],
+    [-1, -1,  1],
+    [ 1, -1,  1],
+    [ 1,  1, -1],
+    [-1,  1, -1],
+    [-1, -1, -1],
+    [ 1, -1, -1],
+  ];
+
+  // Generate a grid of vertices on a quarter-sphere for each corner
+  const cornerVerts = corners.map((c, ci) => {
+    const [sx, sy, sz] = signs[ci];
+    const grid = [];
+    for (let i = 0; i <= segs; i++) {
+      const phi = (Math.PI / 2) * (i / segs);
+      const row = [];
+      for (let j = 0; j <= segs; j++) {
+        const theta = (Math.PI / 2) * (j / segs);
+        const x = c[0] + sx * r * Math.sin(phi) * Math.cos(theta);
+        const y = c[1] + sy * r * Math.sin(phi) * Math.sin(theta);
+        const z = c[2] + sz * r * Math.cos(phi);
+        row.push(m.addVertex(x, y, z));
+      }
+      grid.push(row);
+    }
+    return grid;
+  });
+
+  // Helper: add quad (ensure CCW winding when viewed from outside)
+  const quad = (a, b, c, d) => m.addQuad(a, b, c, d);
+
+  // Tile each corner's quarter-sphere grid
+  // For each corner, determine if winding needs flip based on signs product
+  for (let ci = 0; ci < 8; ci++) {
+    const g = cornerVerts[ci];
+    const [sx, sy, sz] = signs[ci];
+    const flip = (sx * sy * sz) < 0;
+    for (let i = 0; i < segs; i++) {
+      for (let j = 0; j < segs; j++) {
+        const a = g[i][j], b = g[i+1][j], c = g[i+1][j+1], d = g[i][j+1];
+        flip ? quad(a, d, c, b) : quad(a, b, c, d);
+      }
+    }
+  }
+
+  // Connect edge strips between adjacent corners
+  // Top face edges (z+ corners 0,1,2,3): j=0 edge of phi arc is on top face
+  // Bottom face edges (z- corners 4,5,6,7): j=0 edge
+  // We connect matching rows between neighbouring corner grids
+
+  // Helper: edge strip from two corner grids (bridge two rows)
+  const strip = (rowA, rowB, flip = false) => {
+    for (let k = 0; k < rowA.length - 1; k++) {
+      const a = rowA[k], b = rowA[k+1], c = rowB[k+1], d = rowB[k];
+      flip ? quad(a, d, c, b) : quad(a, b, c, d);
+    }
+  };
+
+  // Top ring (corners 0-3, phi=0 row = top face, z+)
+  // phi=0 row: grid[0][j], j=0..segs → arc from +z axis toward +x/+y
+  // Between top corners along X edge: corners 0(+x+y) and 1(-x+y) share y+ edge
+  // Corner 0 grid[0][j] sweeps from +z toward +x; corner 1 grid[0][j] sweeps from +z toward -x
+  // We need to bridge the phi=0 rows of adjacent corners
+
+  // Top face strips (z = +hh face)
+  // 0↔1: share +y edge top
+  strip(cornerVerts[0][0].slice().reverse(), cornerVerts[1][0], false);
+  // 1↔2: share -x edge top
+  strip(cornerVerts[1][0].slice().reverse(), cornerVerts[2][0], false);
+  // 2↔3: share -y edge top
+  strip(cornerVerts[2][0].slice().reverse(), cornerVerts[3][0], false);
+  // 3↔0: share +x edge top
+  strip(cornerVerts[3][0].slice().reverse(), cornerVerts[0][0], false);
+
+  // Bottom face strips (corners 4-7, same pattern)
+  strip(cornerVerts[4][0], cornerVerts[5][0].slice().reverse(), false);
+  strip(cornerVerts[5][0], cornerVerts[6][0].slice().reverse(), false);
+  strip(cornerVerts[6][0], cornerVerts[7][0].slice().reverse(), false);
+  strip(cornerVerts[7][0], cornerVerts[4][0].slice().reverse(), false);
+
+  // Vertical edge strips (each top corner connects to bottom corner below)
+  // Corner 0(+x+y+z) ↔ corner 4(+x+y-z): theta=0 col (j=0) of both
+  for (const [top, bot] of [[0,4],[1,5],[2,6],[3,7]]) {
+    const colTop = cornerVerts[top].map(row => row[0]);
+    const colBot = cornerVerts[bot].map(row => row[0]).slice().reverse();
+    strip(colTop, colBot, false);
+  }
+
+  // Face patches (flat quads filling center of each face)
+  // +Z top face center
+  const tl = cornerVerts[1][0][segs]; // corner 1 top-right end of arc
+  const tr = cornerVerts[0][0][segs]; // corner 0 top-left end of arc
+  const bl = cornerVerts[2][0][segs]; // corner 2
+  const br = cornerVerts[3][0][segs]; // corner 3
+  m.addQuad(tr, tl, bl, br); // top
+
+  // -Z bottom face center
+  const btl = cornerVerts[5][0][segs];
+  const btr = cornerVerts[4][0][segs];
+  const bbl = cornerVerts[6][0][segs];
+  const bbr = cornerVerts[7][0][segs];
+  m.addQuad(btr, bbr, bbl, btl); // bottom
+
+  // +Y front face center
+  const ftr = cornerVerts[0][segs][0];
+  const ftl = cornerVerts[1][segs][0];
+  const fbr = cornerVerts[4][segs][0];
+  const fbl = cornerVerts[5][segs][0];
+  m.addQuad(ftr, fbr, fbl, ftl);
+
+  // -Y back face center
+  const batr = cornerVerts[3][segs][0];
+  const batl = cornerVerts[2][segs][0];
+  const babr = cornerVerts[7][segs][0];
+  const babl = cornerVerts[6][segs][0];
+  m.addQuad(batr, batl, babl, babr);
+
+  // +X right face center
+  const rtr = cornerVerts[0][segs][segs];
+  const rtl = cornerVerts[3][segs][segs];
+  const rbr = cornerVerts[4][segs][segs];
+  const rbl = cornerVerts[7][segs][segs];
+  m.addQuad(rtr, rtl, rbl, rbr);
+
+  // -X left face center
+  const ltr = cornerVerts[1][segs][segs];
+  const ltl = cornerVerts[2][segs][segs];
+  const lbr = cornerVerts[5][segs][segs];
+  const lbl = cornerVerts[6][segs][segs];
+  m.addQuad(ltr, lbr, lbl, ltl);
+
+  return m;
+}
+
+/**
+ * UV Sphere centered at origin.
+ * @param {number} r radius
+ * @param {number} latSegs latitude segments (stacks)
+ * @param {number} lonSegs longitude segments (slices)
+ */
+export function sphere(r = 5, latSegs = 16, lonSegs = 24) {
+  const m = new Mesh();
+  const verts = [];
+
+  for (let lat = 0; lat <= latSegs; lat++) {
+    const theta = (lat / latSegs) * Math.PI;
+    const sinT = Math.sin(theta), cosT = Math.cos(theta);
+    const row = [];
+    for (let lon = 0; lon <= lonSegs; lon++) {
+      const phi = (lon / lonSegs) * Math.PI * 2;
+      const x = r * sinT * Math.cos(phi);
+      const y = r * sinT * Math.sin(phi);
+      const z = r * cosT;
+      row.push(m.addVertex(x, y, z));
+    }
+    verts.push(row);
+  }
+
+  for (let lat = 0; lat < latSegs; lat++) {
+    for (let lon = 0; lon < lonSegs; lon++) {
+      const a = verts[lat][lon];
+      const b = verts[lat][lon + 1];
+      const c = verts[lat + 1][lon + 1];
+      const d = verts[lat + 1][lon];
+      if (lat === 0) {
+        m.addFace(a, b, c);
+        m.addFace(a, c, d);
+      } else if (lat === latSegs - 1) {
+        m.addFace(a, b, d);
+        m.addFace(b, c, d);
+      } else {
+        m.addQuad(a, b, c, d);
+      }
+    }
+  }
+
+  return m;
+}
+
+/**
+ * Wedge (right-angle triangular prism) — ramp shape.
+ * Bottom face is w×d, rises from Z=0 at front to Z=h at back.
+ * @param {number} w width  @param {number} d depth  @param {number} h height
+ */
+export function wedge(w = 20, d = 30, h = 15) {
+  const m = new Mesh();
+  const hw = w / 2;
+
+  // 6 vertices
+  const v = [
+    m.addVertex(-hw, -d/2, 0),   // 0 front-bottom-left
+    m.addVertex( hw, -d/2, 0),   // 1 front-bottom-right
+    m.addVertex( hw,  d/2, 0),   // 2 back-bottom-right
+    m.addVertex(-hw,  d/2, 0),   // 3 back-bottom-left
+    m.addVertex(-hw,  d/2, h),   // 4 back-top-left
+    m.addVertex( hw,  d/2, h),   // 5 back-top-right
+  ];
+
+  m.addQuad(v[0], v[3], v[2], v[1]); // bottom
+  m.addQuad(v[3], v[4], v[5], v[2]); // back wall
+  m.addFace(v[0], v[1], v[5]);       // right slope tri 1
+  m.addFace(v[0], v[5], v[4]);       // right slope tri 2 (wait, should be per-side)
+  m.addFace(v[1], v[2], v[5]);       // right side
+  m.addFace(v[0], v[4], v[3]);       // left side
+  m.addFace(v[0], v[1], v[5]);       // slope face
+  m.addFace(v[0], v[5], v[4]);       // slope face 2
+
+  // Build cleaner wedge with correct faces
+  const m2 = new Mesh();
+  const vv = {
+    fl: m2.addVertex(-hw, -d/2, 0),
+    fr: m2.addVertex( hw, -d/2, 0),
+    br: m2.addVertex( hw,  d/2, 0),
+    bl: m2.addVertex(-hw,  d/2, 0),
+    tl: m2.addVertex(-hw,  d/2, h),
+    tr: m2.addVertex( hw,  d/2, h),
+  };
+
+  m2.addQuad(vv.fl, vv.bl, vv.br, vv.fr); // bottom
+  m2.addQuad(vv.bl, vv.tl, vv.tr, vv.br); // back wall
+  m2.addFace(vv.fl, vv.fr, vv.tr);         // slope face right tri
+  m2.addFace(vv.fl, vv.tr, vv.tl);         // slope face left tri
+  m2.addFace(vv.fl, vv.tl, vv.bl);         // left side
+  m2.addFace(vv.fr, vv.br, vv.tr);         // right side
+
+  return m2;
+}
+
+/**
+ * Regular hexagonal prism (flat-top orientation).
+ * @param {number} r  circumradius (center to vertex)
+ * @param {number} h  height
+ */
+export function hexPrism(r = 5, h = 10) {
+  const m = new Mesh();
+  const hz = h / 2;
+  const n = 6;
+  const bottom = [], top = [];
+
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const x = Math.cos(a) * r;
+    const y = Math.sin(a) * r;
+    bottom.push(m.addVertex(x, y, -hz));
+    top.push(m.addVertex(x, y,  hz));
+  }
+
+  const bc = m.addVertex(0, 0, -hz);
+  const tc = m.addVertex(0, 0,  hz);
+
+  for (let i = 0; i < n; i++) {
+    const next = (i + 1) % n;
+    m.addQuad(bottom[i], top[i], top[next], bottom[next]); // side
+    m.addFace(bc, bottom[next], bottom[i]);                 // bottom cap
+    m.addFace(tc, top[i], top[next]);                       // top cap
+  }
+
+  return m;
 }
 
 /**

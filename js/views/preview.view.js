@@ -27,8 +27,8 @@ const previewView = {
         <div class="page-header flex-between">
           <h2>Preview</h2>
           <div class="flex gap-2">
-            <span class="badge ${aiProvider === 'openrouter' ? 'badge-ai' : 'badge-deterministic'}">
-              ${aiProvider === 'openrouter' ? '✦ AI' : '◉ Deterministic'}
+            <span class="badge ${['openrouter', 'groq', 'gemini', 'ollama'].includes(aiProvider) ? 'badge-ai' : 'badge-deterministic'}">
+              ${['openrouter', 'groq', 'gemini', 'ollama'].includes(aiProvider) ? '✦ AI' : '◉ Deterministic'}
             </span>
             <span class="badge badge-muted">${partType}</span>
           </div>

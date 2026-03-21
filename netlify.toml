@@ -1,15 +1,26 @@
 [build]
+  # No build step — this is a pure static PWA served from the repo root
+  base    = ""
   publish = "."
+  command = ""
 
+# Never cache the service worker
 [[headers]]
   for = "/sw.js"
   [headers.values]
-    Cache-Control = "no-cache"
+    Cache-Control = "no-cache, no-store, must-revalidate"
 
+# Security headers for all routes
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=self"
+    Permissions-Policy = "camera=self, microphone=(), geolocation=()"
+
+# SPA fallback — all unknown routes serve index.html
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200

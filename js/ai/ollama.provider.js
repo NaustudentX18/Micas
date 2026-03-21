@@ -73,7 +73,7 @@ const ollamaProvider = {
             role: 'system',
             content: 'You are a professional mechanical engineer and FDM 3D printing expert. Analyze design requirements and respond ONLY with a JSON object — no markdown, no explanation. The JSON must include: object_type, recommended_generator, material, fit_tolerance, dimensions (with width/depth/height in mm), confidence (0-100), assumptions (array), missing_info (array), reasoning (string).'
           },
-          { role: 'user', content: prompt.text }
+          { role: 'user', content: prompt }
         ],
         stream: false,
         format: 'json'

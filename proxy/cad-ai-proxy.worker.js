@@ -16,18 +16,26 @@
 
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const FREE_LIMIT_PER_HOUR = 10;      // requests per IP per hour (no personal key)
-const CORS_ORIGINS = ['*'];           // Lock down to your domain in production
+// Restrict to your deployed origins. Set env var ALLOWED_ORIGINS (comma-separated) or
+// fall back to localhost for development only.
+const DEFAULT_DEV_ORIGIN = 'http://localhost:5173';
 
 export default {
   async fetch(request, env) {
+    const origin = request.headers.get('Origin') || '';
+    const allowedOrigins = env.ALLOWED_ORIGINS
+      ? env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
+      : [DEFAULT_DEV_ORIGIN];
+    const allowOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
-      return corsResponse(null, 204);
+      return corsResponse(null, 204, allowOrigin);
     }
 
     // Only allow POST
     if (request.method !== 'POST') {
-      return corsResponse(JSON.stringify({ error: 'Method not allowed' }), 405);
+      return corsResponse(JSON.stringify({ error: 'Method not allowed' }), 405, allowOrigin);
     }
 
     // Parse request body
@@ -35,14 +43,14 @@ export default {
     try {
       body = await request.json();
     } catch {
-      return corsResponse(JSON.stringify({ error: 'Invalid JSON body' }), 400);
+      return corsResponse(JSON.stringify({ error: 'Invalid JSON body' }), 400, allowOrigin);
     }
 
     const { provider = 'groq', ...groqBody } = body;
 
     // Only Groq supported via proxy for now
     if (provider !== 'groq') {
-      return corsResponse(JSON.stringify({ error: `Provider "${provider}" not supported by proxy` }), 400);
+      return corsResponse(JSON.stringify({ error: `Provider "${provider}" not supported by proxy` }), 400, allowOrigin);
     }
 
     // Rate limit by IP
@@ -58,7 +66,8 @@ export default {
             message: `Free tier: ${FREE_LIMIT_PER_HOUR} AI analyses per hour. Add your own Groq key in Settings to remove this limit.`,
             retryAfter: 3600 - (Math.floor(Date.now() / 1000) % 3600)
           }),
-          429
+          429,
+          allowOrigin
         );
       }
       // Increment counter
@@ -67,7 +76,7 @@ export default {
 
     // Forward to Groq
     if (!env.GROQ_API_KEY) {
-      return corsResponse(JSON.stringify({ error: 'Proxy not configured — GROQ_API_KEY secret missing' }), 503);
+      return corsResponse(JSON.stringify({ error: 'Proxy not configured — GROQ_API_KEY secret missing' }), 503, allowOrigin);
     }
 
     try {
@@ -76,7 +85,7 @@ export default {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${env.GROQ_API_KEY}`,
-          'User-Agent': 'MyPersonalCAD/3.0'
+          'User-Agent': 'Micas/3.0'
         },
         body: JSON.stringify({
           model: groqBody.model || 'llama-3.1-70b-versatile',
@@ -92,25 +101,27 @@ export default {
       if (!groqRes.ok) {
         return corsResponse(
           JSON.stringify({ error: data.error?.message || 'Groq API error', status: groqRes.status }),
-          groqRes.status
+          groqRes.status,
+          allowOrigin
         );
       }
 
-      return corsResponse(JSON.stringify(data), 200);
+      return corsResponse(JSON.stringify(data), 200, allowOrigin);
     } catch (err) {
-      return corsResponse(JSON.stringify({ error: 'Proxy fetch failed', detail: err.message }), 502);
+      return corsResponse(JSON.stringify({ error: 'Proxy fetch failed', detail: err.message }), 502, allowOrigin);
     }
   }
 };
 
-function corsResponse(body, status = 200) {
+function corsResponse(body, status = 200, origin = '') {
   return new Response(body, {
     status,
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, X-Provider',
+      'Vary': 'Origin',
     }
   });
 }

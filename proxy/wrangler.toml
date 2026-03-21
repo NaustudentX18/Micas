@@ -3,12 +3,19 @@ main = "cad-ai-proxy.worker.js"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-# KV namespace for rate limiting
-# Create it first: wrangler kv:namespace create "RATE_LIMIT"
-# Then paste the ID below
-[[kv_namespaces]]
-binding = "RATE_LIMIT"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+# KV namespace for rate limiting (optional — omit to disable rate limiting)
+# To enable:
+#   1. wrangler kv:namespace create "RATE_LIMIT"
+#   2. Paste the returned id below and uncomment the block
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT"
+# id = "<paste-id-here>"
+
+# Allowed CORS origins (comma-separated). Set as an environment variable or
+# add a [vars] block with ALLOWED_ORIGINS for your deployed domain.
+# Example:
+# [vars]
+# ALLOWED_ORIGINS = "https://micas.pages.dev,https://yourdomain.com"
 
 # Routes — set to your actual domain
 # Uncomment and adjust once deployed to Cloudflare Pages

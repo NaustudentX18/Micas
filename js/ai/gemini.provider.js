@@ -34,13 +34,13 @@ const geminiProvider = {
     // Build multimodal content parts
     const parts = [
       {
-        text: `You are a professional mechanical engineer and FDM 3D printing expert.\n\nAnalyze these design requirements and respond with ONLY a valid JSON object.\n\n${prompt.text}\n\nRespond ONLY with JSON. No markdown. No explanation. The JSON must include: object_type, recommended_generator, material, fit_tolerance, dimensions (with width/depth/height in mm), confidence (0-100 integer), assumptions (string array), missing_info (string array), reasoning (string).`
+        text: `You are a professional mechanical engineer and FDM 3D printing expert.\n\nAnalyze these design requirements and respond with ONLY a valid JSON object.\n\n${prompt}\n\nRespond ONLY with JSON. No markdown. No explanation. The JSON must include: object_type, recommended_generator, material, fit_tolerance, dimensions (with width/depth/height in mm), confidence (0-100 integer), assumptions (string array), missing_info (string array), reasoning (string).`
       }
     ];
 
     // Add photos as inline image parts (Gemini supports up to 16 images)
-    if (prompt.images?.length) {
-      for (const img of prompt.images.slice(0, 4)) {
+    if (intake.photos?.length) {
+      for (const img of intake.photos.slice(0, 4)) {
         // dataUrl format: "data:image/jpeg;base64,..."
         const [meta, b64] = img.split(',');
         const mimeType = meta.match(/data:([^;]+)/)?.[1] || 'image/jpeg';

@@ -42,12 +42,7 @@ function scoreOrientation(mesh, rotate) {
 
     if (downward && angleFromVert > 45) overhangs++;
 
-    // Contact area: faces pointing straight down (norm_z < -0.95) near bottom
-    const minZ = Math.min(v0[2], v1[2], v2[2]);
-    const rotBounds = {
-      min: rotate(bounds.min),
-      max: rotate(bounds.max)
-    };
+    // Contact area: faces pointing straight down
     if (norm[2] < -0.9) contactArea++;
   }
 

@@ -64,7 +64,7 @@ export default {
       }
     }
 
-    placeOnFloor(mesh);
+    mesh = placeOnFloor(mesh);
 
     const p = { width, depth, height, wall, post_dia: postDia, post_height: postHeight, bore_dia: postBoreDia };
     const openscadSource = scad.buildSCADFile('Enclosure', p, `

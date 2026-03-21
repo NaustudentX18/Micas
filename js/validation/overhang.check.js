@@ -13,7 +13,6 @@ export function checkOverhangs(mesh) {
   const warnings = [];
   let criticalCount = 0;
   let warnCount = 0;
-  let totalArea = 0;
 
   for (const [i0, i1, i2] of mesh.faces) {
     const v0 = mesh.vertices[i0];
@@ -21,7 +20,6 @@ export function checkOverhangs(mesh) {
     const v2 = mesh.vertices[i2];
 
     const norm = faceNormal(v0, v1, v2);
-    const downDot = -norm[2]; // dot with [0,0,-1] = negative Z component
 
     // downDot > 0 means face is pointing downward
     // angle from vertical = acos(|norm_z|) = acos(|1 - downDot_magnitude|)

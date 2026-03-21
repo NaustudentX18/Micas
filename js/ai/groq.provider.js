@@ -37,7 +37,7 @@ const groqProvider = {
       },
       {
         role: 'user',
-        content: prompt.text
+        content: prompt
       }
     ];
 

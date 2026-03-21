@@ -3,13 +3,18 @@ import bus from '../bus.js';
 import toast from '../components/toast.component.js';
 
 const MODELS = [
-  { value: 'anthropic/claude-3-haiku',    label: 'Claude 3 Haiku (fast, affordable)' },
-  { value: 'anthropic/claude-3-sonnet',   label: 'Claude 3 Sonnet (balanced)' },
-  { value: 'anthropic/claude-3-opus',     label: 'Claude 3 Opus (highest quality)' },
-  { value: 'openai/gpt-4o-mini',          label: 'GPT-4o mini (fast)' },
-  { value: 'openai/gpt-4o',               label: 'GPT-4o (high quality)' },
-  { value: 'google/gemini-flash-1.5',     label: 'Gemini Flash 1.5' },
-  { value: 'google/gemini-pro-1.5',       label: 'Gemini Pro 1.5 (vision)' },
+  { value: 'anthropic/claude-3-haiku',       label: 'Claude 3 Haiku (fast, affordable)' },
+  { value: 'anthropic/claude-3-sonnet',      label: 'Claude 3 Sonnet (balanced)' },
+  { value: 'anthropic/claude-3-opus',        label: 'Claude 3 Opus (highest quality)' },
+  { value: 'anthropic/claude-3.5-haiku',     label: 'Claude 3.5 Haiku (fast, vision)' },
+  { value: 'anthropic/claude-3.5-sonnet',    label: 'Claude 3.5 Sonnet (recommended)' },
+  { value: 'openai/gpt-4o-mini',             label: 'GPT-4o mini (fast, affordable)' },
+  { value: 'openai/gpt-4o',                  label: 'GPT-4o (high quality, vision)' },
+  { value: 'google/gemini-flash-1.5',        label: 'Gemini Flash 1.5 (free tier)' },
+  { value: 'google/gemini-pro-1.5',          label: 'Gemini Pro 1.5 (vision)' },
+  { value: 'google/gemini-2.0-flash-exp:free', label: 'Gemini 2.0 Flash (free, vision)' },
+  { value: 'meta-llama/llama-3.1-8b-instruct:free', label: 'Llama 3.1 8B (free)' },
+  { value: 'microsoft/phi-3-mini-128k-instruct:free', label: 'Phi-3 Mini 128K (free)' },
 ];
 
 const settingsView = {
@@ -46,7 +51,7 @@ const settingsView = {
           <div class="form-group mb-4">
             <label class="form-label" for="or-key">OpenRouter API Key</label>
             <input class="input" type="password" id="or-key" placeholder="sk-or-v1-…" value="${settings.openrouterApiKey || ''}" autocomplete="off">
-            <p class="form-hint">Get a key at <span style="color:var(--color-accent)">openrouter.ai</span>. Key stored locally on your device only.</p>
+            <p class="form-hint">Get a free key at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" style="color:var(--color-accent)">openrouter.ai/keys</a>. Several models have a free tier. Key stored locally on your device only.</p>
           </div>
 
           <div class="form-group mb-4">

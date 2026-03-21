@@ -1,0 +1,2 @@
+# Netlify redirects — required for hash-based SPA fallback
+/*  /index.html  200

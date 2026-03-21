@@ -15,6 +15,10 @@ A mobile-first Progressive Web App (PWA) that helps you design 3D-printable part
 
 ## Free Online Deployment
 
+> 👋 **New here?** See **[DEPLOYMENT.md](DEPLOYMENT.md)** for a plain-English,
+> step-by-step guide covering local use, private online hosting, and eventually
+> adding a custom domain — no prior experience needed.
+
 No build step required — this is plain HTML + ES6 modules.
 
 ### Option A: GitHub Pages (free)

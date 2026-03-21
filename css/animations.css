@@ -1,0 +1,210 @@
+/* ── Keyframes ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOutRight {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(24px); }
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideOutDown {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(24px); }
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 12px var(--color-accent-glow); }
+  50% { box-shadow: 0 0 28px var(--color-accent-glow-strong); }
+}
+
+@keyframes tapFeedback {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+/* ── Skeleton loader ── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.10) 50%,
+    rgba(255,255,255,0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeleton-text { height: 1em; margin-bottom: 0.5em; }
+.skeleton-text:last-child { width: 75%; }
+.skeleton-title { height: 1.5em; width: 60%; margin-bottom: 0.75em; }
+.skeleton-card {
+  height: 120px;
+  border-radius: var(--radius-card);
+}
+.skeleton-avatar { width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Page transitions ── */
+.page-enter { animation: fadeInUp 280ms ease both; }
+.page-enter-fast { animation: fadeInUp 180ms ease both; }
+
+/* ── Stagger children ── */
+.stagger-children > * {
+  animation: fadeInUp 280ms ease both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-children > *:nth-child(n+7) { animation-delay: 300ms; }
+
+/* ── Collapsible panel ── */
+.collapsible-content {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.35s ease;
+}
+.collapsible-content.open { max-height: 2000px; }
+
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  min-height: 48px;
+  padding: var(--space-2) 0;
+  touch-action: manipulation;
+}
+.collapsible-chevron {
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+.collapsible-header.open .collapsible-chevron { transform: rotate(180deg); }
+
+/* ── 3D viewer wrapper ── */
+.viewer-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--glass-border);
+  /* Square-ish on mobile for maximum 3D view */
+  aspect-ratio: 4/3;
+}
+
+@media (min-width: 480px) {
+  .viewer-wrap { aspect-ratio: 16/10; }
+}
+
+.viewer-canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  touch-action: none; /* Let Three.js handle all touch events */
+}
+
+.viewer-skeleton {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.viewer-controls {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.viewer-btn {
+  width: 44px;
+  height: 44px;
+  background: rgba(10,10,15,0.85);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  color: var(--color-text-muted);
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+.viewer-btn:active { background: rgba(50,50,70,0.95); }
+@media (hover: hover) {
+  .viewer-btn:hover { background: rgba(30,30,45,0.92); color: var(--color-text); }
+}
+.viewer-btn.active { border-color: var(--color-accent); color: var(--color-accent); }
+
+/* ── Print risk score bar ── */
+.risk-bar { height: 10px; background: var(--glass-border); border-radius: 5px; overflow: hidden; position: relative; }
+.risk-bar-fill {
+  height: 100%; border-radius: 5px;
+  transition: width 0.6s ease;
+}
+.risk-low .risk-bar-fill { background: var(--color-success); }
+.risk-medium .risk-bar-fill { background: var(--color-warning); }
+.risk-high .risk-bar-fill { background: var(--color-error); }
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .skeleton { animation: none; background: rgba(255,255,255,0.06); }
+}

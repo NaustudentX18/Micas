@@ -1,4 +1,4 @@
-const CACHE_NAME = 'micas-shell-v2';
+const CACHE_NAME = 'micas-shell-v3';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -17,6 +17,7 @@ const PRECACHE_ASSETS = [
   '/js/db/projects.store.js',
   '/js/db/parts.store.js',
   '/js/db/settings.store.js',
+  '/js/views/_pipeline.js',
   '/js/views/dashboard.view.js',
   '/js/views/intake.view.js',
   '/js/views/questions.view.js',
@@ -87,7 +88,7 @@ const PRECACHE_ASSETS = [
 ];
 
 // AI API hostnames — never intercept these
-const AI_HOSTS = ['openrouter.ai', 'api.openai.com', 'generativelanguage.googleapis.com', 'api.groq.com'];
+const AI_HOSTS = ['openrouter.ai', 'api.openai.com', 'generativelanguage.googleapis.com'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -110,12 +111,8 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
 
-  // Never cache AI API calls or proxy routes
+  // Never cache AI API calls
   if (AI_HOSTS.some(h => url.hostname.includes(h))) return;
-  if (url.pathname.startsWith('/api/')) return;
-
-  // Only cache GET requests — Cache.put throws on non-GET
-  if (e.request.method !== 'GET') return;
 
   // Cache-first for everything else
   e.respondWith(

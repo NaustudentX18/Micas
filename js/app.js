@@ -1,10 +1,18 @@
 import router from './router.js';
 import bus from './bus.js';
+import settingsStore from './db/settings.store.js';
 
 // Register service worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(e => console.warn('[SW]', e));
 }
+
+// Warm up AI key availability flag from IndexedDB so openrouter.isAvailable()
+// returns true after a page reload without requiring a visit to Settings first.
+settingsStore.get('openrouterApiKey').then(key => {
+  if (key) sessionStorage.setItem('or_key_cached', '1');
+  else sessionStorage.removeItem('or_key_cached');
+}).catch(() => {});
 
 // Register all routes (lazy-loaded views)
 router.register('/dashboard',                   () => import('./views/dashboard.view.js'));

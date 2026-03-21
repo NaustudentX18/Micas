@@ -1,2 +1,2 @@
-# SPA fallback — all routes serve index.html (handled by hash router client-side)
-/*    /index.html   200
+# Netlify redirects — required for hash-based SPA fallback
+/*  /index.html  200

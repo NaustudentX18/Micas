@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport-fit=cover for iPhone notch/Dynamic Island -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#0a0a0f" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#0a0a0f">
+
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="My CAD">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <!-- Android Chrome address bar color -->
+  <meta name="theme-color" content="#0a0a0f">
+
+  <!-- SEO / Share -->
+  <meta name="description" content="AI-powered CAD assistant for 3D printing. Design parts with your voice, photos, and measurements — fully offline.">
+  <meta name="application-name" content="My Personal CAD">
+
+  <!-- iOS splash screen color -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <title>My Personal CAD</title>
+
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
+
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/glass.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/animations.css">
+
+  <style>
+    /* Inline critical: prevent FOUC and ensure immediate full-bleed dark bg */
+    html, body { background: #0a0a0f; }
+    #app { min-height: 100svh; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="app-loading" class="app-loading">
+      <div class="app-loading-inner">
+        <div class="app-logo">
+          <svg width="56" height="56" viewBox="0 0 48 48" fill="none">
+            <rect width="48" height="48" rx="14" fill="url(#logoGrad)"/>
+            <path d="M12 36 L24 12 L36 36" stroke="white" stroke-width="2.5" stroke-linejoin="round" fill="none"/>
+            <path d="M16 28 L32 28" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="24" cy="36" r="2.5" fill="white" opacity="0.8"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48">
+                <stop offset="0%" stop-color="#6c8aff"/>
+                <stop offset="100%" stop-color="#a46cff"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <p class="app-loading-text">My Personal CAD</p>
+        <div class="spinner"></div>
+      </div>
+    </div>
+    <nav id="app-nav" class="app-nav hidden"></nav>
+    <main id="app-main" class="app-main"></main>
+    <div id="toast-container" class="toast-container"></div>
+    <div id="modal-container"></div>
+  </div>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

@@ -3,9 +3,12 @@
  * Machine-readable design spec that can be re-imported to regenerate the part.
  */
 
+const CURRENT_SCHEMA = 'micas-v2';
+const LEGACY_SCHEMAS = ['my-personal-cad-v2'];
+
 export function generateParametricJSON(brief, generatorId, params, metadata) {
   const spec = {
-    _schema: 'my-personal-cad-v2',
+    _schema: CURRENT_SCHEMA,
     _version: '2.0.0',
     _generated: new Date().toISOString(),
     generator: {
@@ -33,8 +36,9 @@ export function generateParametricJSON(brief, generatorId, params, metadata) {
  */
 export function parseParametricJSON(jsonString) {
   const spec = JSON.parse(jsonString);
-  if (spec._schema !== 'my-personal-cad-v2') {
-    throw new Error('Not a My Personal CAD v2 parametric JSON file');
+  const supportedSchemas = [CURRENT_SCHEMA, ...LEGACY_SCHEMAS];
+  if (!supportedSchemas.includes(spec._schema)) {
+    throw new Error('Not a supported Micas parametric JSON file');
   }
   return {
     generatorId: spec.generator.id,

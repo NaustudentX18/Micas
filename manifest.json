@@ -1,6 +1,6 @@
 {
-  "name": "My Personal CAD",
-  "short_name": "My CAD",
+  "name": "Micas",
+  "short_name": "Micas",
   "description": "AI-powered hybrid CAD assistant for 3D printing",
   "start_url": "/",
   "display": "standalone",

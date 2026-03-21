@@ -25,7 +25,7 @@ export function generateBambuSheet(brief, metadata, validationReport) {
   const mass = metadata?.estimatedMass || 0;
 
   const sheet = {
-    _generator: 'My Personal CAD v2',
+    _generator: 'Micas v2',
     _generated: new Date().toISOString(),
     project: {
       name: metadata?.partType ? `${metadata.partType}_part` : 'cad_part',

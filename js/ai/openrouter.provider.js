@@ -83,7 +83,7 @@ const openrouterProvider = {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': window.location.origin,
-        'X-Title': 'My Personal CAD'
+        'X-Title': 'Micas'
       },
       body: JSON.stringify({
         model: model || 'anthropic/claude-3-haiku',

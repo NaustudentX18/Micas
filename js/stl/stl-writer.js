@@ -5,7 +5,7 @@
  * All values little-endian.
  */
 
-const HEADER_TEXT = 'Binary STL - My Personal CAD v2 | github.com/micas-cad';
+const HEADER_TEXT = 'Binary STL - Micas v2 | github.com/micas-cad';
 
 /**
  * Write a Mesh to binary STL format.

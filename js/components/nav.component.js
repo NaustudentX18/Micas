@@ -34,7 +34,7 @@ const nav = {
                 </linearGradient>
               </defs>
             </svg>
-            My CAD
+            Micas
           </div>
           ${NAV_ITEMS.map(item => `
             <button

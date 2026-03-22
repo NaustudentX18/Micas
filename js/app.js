@@ -42,6 +42,43 @@ bus.once('state:changed', () => {
 // Fallback — hide after 1.5s regardless
 setTimeout(() => loading.classList.add('fade-out'), 1500);
 
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  // Skip if modifier keys are held
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  // Skip if focus is in an editable element
+  const target = e.target;
+  const tag = target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable) return;
+
+  const key = e.key;
+
+  // n/N — new project (dashboard only)
+  if (key === 'n' || key === 'N') {
+    const btn = document.querySelector('#new-project-btn');
+    if (btn) { btn.click(); return; }
+  }
+
+  // s/S — navigate to settings
+  if (key === 's' || key === 'S') {
+    router.navigate('/settings');
+    return;
+  }
+
+  // h/H — navigate to dashboard (home)
+  if (key === 'h' || key === 'H') {
+    router.navigate('/dashboard');
+    return;
+  }
+
+  // Escape — close modal overlay if present
+  if (key === 'Escape') {
+    const overlay = document.querySelector('.modal-overlay');
+    if (overlay) overlay.remove();
+    return;
+  }
+});
+
 // Global error handler
 window.addEventListener('unhandledrejection', e => {
   console.error('[app] Unhandled rejection:', e.reason);

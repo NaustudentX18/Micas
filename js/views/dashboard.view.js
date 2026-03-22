@@ -9,6 +9,15 @@ import modal from '../components/modal.component.js';
 import toast from '../components/toast.component.js';
 import { parseSTL } from '../stl/stl-reader.js';
 
+const TEMPLATES = [
+  { id: 'wall-mount',   name: 'Wall Mount',       desc: 'Printable bracket or holder for walls.',       icon: '🔩' },
+  { id: 'enclosure',    name: 'Enclosure / Box',   desc: 'Lid + base enclosure for electronics.',        icon: '📦' },
+  { id: 'cable-clip',   name: 'Cable Clip',        desc: 'Route and organise cables cleanly.',           icon: '🔌' },
+  { id: 'stand',        name: 'Stand / Riser',     desc: 'Phone, tablet, or device stand.',              icon: '📱' },
+  { id: 'jig',          name: 'Jig / Fixture',     desc: 'Alignment or drilling jig for workshop use.',  icon: '🔧' },
+  { id: 'cover',        name: 'Cover / Cap',       desc: 'Protective cap or cover for an opening.',      icon: '🛡️' },
+];
+
 const dashboard = {
   _unsub: null,
 
@@ -40,6 +49,8 @@ const dashboard = {
   },
 
   _render(container, projects) {
+    const showSearch = projects.length > 3;
+
     container.innerHTML = `
       <div class="page page-enter">
         <div class="page-header flex-between">
@@ -48,6 +59,10 @@ const dashboard = {
             <p>${projects.length} project${projects.length !== 1 ? 's' : ''}</p>
           </div>
           <div class="flex gap-2">
+            <button class="btn btn-glass btn-sm" id="templates-btn" title="Start from a template">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+              Templates
+            </button>
             <button class="btn btn-glass btn-sm" id="import-stl-btn" title="Import STL file">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Import STL
@@ -59,20 +74,51 @@ const dashboard = {
           </div>
         </div>
 
+        ${showSearch ? `
+          <div class="search-bar-wrap">
+            <div class="search-bar-inner">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input class="search-input" id="project-search" type="search" placeholder="Search projects…" autocomplete="off">
+            </div>
+          </div>
+        ` : ''}
+
         ${projects.length === 0 ? `
           <div class="empty-state">
-            <div class="empty-state-icon">
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+            <div class="empty-hero">
+              <div class="empty-state-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+              </div>
+              <h3>No Projects Yet</h3>
+              <p>Describe what you need — Micas designs it for your 3D printer.</p>
+              <button class="btn btn-primary mt-4" id="new-project-empty">
+                Start Designing
+              </button>
             </div>
-            <h3>No Projects Yet</h3>
-            <p>Tap the button above to start your first AI-assisted CAD design.</p>
-            <button class="btn btn-primary mt-4" id="new-project-empty">
-              Start Designing
-            </button>
+            <div class="feature-cards mt-4">
+              <div class="feature-card">
+                <div class="feature-card-icon">💬</div>
+                <div class="feature-card-title">Describe It</div>
+                <div class="feature-card-body">Tell Micas what you need in plain language — no CAD skills required.</div>
+              </div>
+              <div class="feature-card">
+                <div class="feature-card-icon">🤖</div>
+                <div class="feature-card-title">AI Designs It</div>
+                <div class="feature-card-body">AI asks smart questions then generates parametric OpenSCAD geometry.</div>
+              </div>
+              <div class="feature-card">
+                <div class="feature-card-icon">🖨️</div>
+                <div class="feature-card-title">Print It</div>
+                <div class="feature-card-body">Export a validated STL ready for Bambu, Prusa, Cura, or any slicer.</div>
+              </div>
+            </div>
           </div>
         ` : `
-          <div class="stagger-children">
+          <div class="stagger-children" id="project-grid">
             ${projects.map(p => projectCard(p)).join('')}
+          </div>
+          <div id="search-empty" class="empty-state" style="display:none">
+            <p class="text-muted">No projects match your search.</p>
           </div>
         `}
 
@@ -84,6 +130,9 @@ const dashboard = {
     container.querySelector('#new-project-btn')?.addEventListener('click', () => this._createProject());
     container.querySelector('#new-project-empty')?.addEventListener('click', () => this._createProject());
 
+    // Templates button
+    container.querySelector('#templates-btn')?.addEventListener('click', () => this._openTemplates());
+
     // Import STL button
     const importBtn = container.querySelector('#import-stl-btn');
     const fileInput = container.querySelector('#stl-file-input');
@@ -94,10 +143,29 @@ const dashboard = {
       fileInput.value = '';
     });
 
+    // Search
+    const searchInput = container.querySelector('#project-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim().toLowerCase();
+        const grid = container.querySelector('#project-grid');
+        const emptyMsg = container.querySelector('#search-empty');
+        if (!grid) return;
+        let visible = 0;
+        grid.querySelectorAll('.project-card').forEach(card => {
+          const name = (card.dataset.name || '').toLowerCase();
+          const matches = !q || name.includes(q);
+          card.style.display = matches ? '' : 'none';
+          if (matches) visible++;
+        });
+        if (emptyMsg) emptyMsg.style.display = (visible === 0 && q) ? '' : 'none';
+      });
+    }
+
     // Bind project card clicks
     container.querySelectorAll('.project-card').forEach(card => {
       card.addEventListener('click', (e) => {
-        if (e.target.closest('[data-delete]')) return;
+        if (e.target.closest('[data-delete]') || e.target.closest('[data-duplicate]')) return;
         const id = card.dataset.id;
         if (id) this._openProject(id);
       });
@@ -125,6 +193,86 @@ const dashboard = {
           await projectsStore.delete(id);
           toast.success('Project deleted');
           bus.emit('project:deleted', { id });
+        }
+      });
+    });
+
+    // Bind duplicate buttons
+    container.querySelectorAll('[data-duplicate]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.duplicate;
+        await this._duplicateProject(id);
+      });
+    });
+  },
+
+  async _duplicateProject(id) {
+    try {
+      const original = await projectsStore.get(id);
+      if (!original) { toast.error('Project not found'); return; }
+
+      const newName = `${original.name} (copy)`;
+      const newProject = await projectsStore.create({
+        name: newName,
+        description: original.description || '',
+        status: original.status,
+      });
+
+      const parts = await partsStore.getByProject(id);
+      for (const part of parts) {
+        const { id: _pid, projectId: _proj, createdAt: _c, updatedAt: _u, ...partData } = part;
+        await partsStore.create(newProject.id, partData);
+      }
+
+      await projectsStore.update(newProject.id, { partCount: original.partCount || 0 });
+
+      toast.success(`Duplicated: ${newName}`);
+      bus.emit('project:saved', { id: newProject.id });
+    } catch (e) {
+      toast.error('Duplicate failed: ' + e.message);
+      console.error('[dashboard] duplicate error:', e);
+    }
+  },
+
+  async _openTemplates() {
+    const overlay = modal.custom(`
+      <h2 class="modal-title">Start from a Template</h2>
+      <p class="modal-body">Choose a starting point — you can customise everything next.</p>
+      <div class="mt-4" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${TEMPLATES.map(t => `
+          <button class="btn btn-glass" style="text-align:left;padding:14px 16px;display:flex;gap:12px;align-items:flex-start" data-template="${t.id}">
+            <span style="font-size:1.5rem;flex-shrink:0">${t.icon}</span>
+            <span>
+              <div style="font-weight:600;font-size:0.9375rem">${t.name}</div>
+              <div style="font-size:0.8125rem;color:var(--color-text-muted);margin-top:2px">${t.desc}</div>
+            </span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="modal-actions mt-4">
+        <button class="btn btn-glass btn-full" id="tpl-cancel-btn">Cancel</button>
+      </div>
+    `);
+
+    overlay.querySelector('#tpl-cancel-btn').addEventListener('click', () => overlay.remove());
+
+    overlay.querySelectorAll('[data-template]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const tplId = btn.dataset.template;
+        const tpl = TEMPLATES.find(t => t.id === tplId);
+        if (!tpl) return;
+        overlay.remove();
+
+        try {
+          const project = await projectsStore.create({ name: tpl.name, description: tpl.desc });
+          state.reset();
+          state.set('currentProjectId', project.id);
+          state.set('intake', { description: tpl.desc, measurements: {}, photos: [] });
+          toast.success(`Template loaded: ${tpl.name}`);
+          router.navigate(`/project/${project.id}/intake`);
+        } catch (e) {
+          toast.error('Failed to create project from template');
         }
       });
     });

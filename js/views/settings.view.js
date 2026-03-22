@@ -231,6 +231,20 @@ const settingsView = {
           </div>
         </div>
 
+        <!-- Default Printer -->
+        <div class="glass-panel p-5 mb-4">
+          <h3 class="mb-4">Default Printer</h3>
+          <div class="select-wrapper">
+            <select class="input input-select" id="default-printer">
+              <option value="bambu-x1c" ${(settings.defaultPrinter || 'bambu-x1c') === 'bambu-x1c' ? 'selected' : ''}>Bambu X1C</option>
+              <option value="prusa-mk4"  ${(settings.defaultPrinter || 'bambu-x1c') === 'prusa-mk4'  ? 'selected' : ''}>Prusa MK4</option>
+              <option value="ender-3"    ${(settings.defaultPrinter || 'bambu-x1c') === 'ender-3'    ? 'selected' : ''}>Ender 3</option>
+              <option value="voron-24"   ${(settings.defaultPrinter || 'bambu-x1c') === 'voron-24'   ? 'selected' : ''}>Voron 2.4</option>
+              <option value="other"      ${(settings.defaultPrinter || 'bambu-x1c') === 'other'      ? 'selected' : ''}>Other</option>
+            </select>
+          </div>
+        </div>
+
         <!-- Display prefs -->
         <div class="glass-panel p-5 mb-4">
           <h3 class="mb-4">Display</h3>
@@ -349,6 +363,12 @@ const settingsView = {
         settingsStore.set('units', radio.value);
         haptic('light');
       });
+    });
+
+    // Default printer
+    container.querySelector('#default-printer')?.addEventListener('change', (e) => {
+      settingsStore.set('defaultPrinter', e.target.value);
+      haptic('light');
     });
 
     // Display prefs

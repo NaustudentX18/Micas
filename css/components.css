@@ -609,3 +609,43 @@ textarea.input { resize: vertical; min-height: 100px; line-height: 1.6; }
 }
 .why-panel-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-accent); margin-bottom: var(--space-2); }
 .why-panel p { color: var(--color-text); font-size: 0.9375rem; line-height: 1.7; }
+
+/* ── Search bar ── */
+.search-bar-wrap { margin-bottom: 16px; }
+.search-bar-inner { position: relative; display: flex; align-items: center; }
+.search-bar-inner > svg { position: absolute; left: 14px; color: var(--color-text-dim); pointer-events: none; flex-shrink: 0; }
+.search-input { width: 100%; padding: 12px 16px 12px 44px; min-height: 48px; background: var(--glass-bg); border: 1.5px solid var(--glass-border); border-radius: var(--radius-pill); color: var(--color-text); font-size: 0.9375rem; transition: border-color var(--transition-fast), box-shadow var(--transition-fast); -webkit-appearance: none; }
+.search-input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-glow); }
+.search-input::placeholder { color: var(--color-text-dim); }
+
+/* ── Feature cards (empty state) ── */
+.feature-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; }
+@media (max-width: 480px) { .feature-cards { grid-template-columns: 1fr; } }
+.feature-card { padding: 16px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-card); text-align: center; }
+.feature-card-icon { font-size: 1.5rem; margin-bottom: 8px; }
+.feature-card-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 4px; color: var(--color-text); }
+.feature-card-body { font-size: 0.8125rem; color: var(--color-text-muted); line-height: 1.4; }
+.empty-hero { text-align: center; padding: 32px 16px 16px; }
+
+/* ── Color swatches in 3D viewer ── */
+.color-picker-row { position: absolute; bottom: 12px; left: 12px; display: flex; gap: 8px; flex-wrap: wrap; max-width: calc(100% - 80px); z-index: 10; }
+.color-swatch { width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid transparent; cursor: pointer; transition: transform var(--transition-fast), border-color var(--transition-fast); touch-action: manipulation; flex-shrink: 0; }
+.color-swatch:active { transform: scale(0.88); }
+.color-swatch.active { border-color: white; box-shadow: 0 0 0 2px rgba(255,255,255,0.4); }
+@media (hover: hover) { .color-swatch:hover { transform: scale(1.2); } }
+
+/* ── Material cost calculator ── */
+.calc-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-card); overflow: hidden; }
+.calc-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.calc-result-item { background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); padding: 12px; border-radius: 10px; text-align: center; }
+.calc-result-value { font-size: 1.125rem; font-weight: 700; color: var(--color-accent); }
+.calc-result-label { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 3px; }
+
+/* ── Printer profiles ── */
+.printer-profiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.printer-profile-card { padding: 12px 14px; background: var(--glass-bg); border: 1.5px solid var(--glass-border); border-radius: var(--radius-md); cursor: pointer; transition: all var(--transition-fast); touch-action: manipulation; text-align: left; }
+.printer-profile-card:active { background: var(--glass-bg-active); transform: scale(0.98); }
+.printer-profile-card.selected { border-color: var(--color-accent); background: var(--color-accent-glow); }
+.printer-profile-name { font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
+.printer-profile-spec { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px; }
+@media (hover: hover) { .printer-profile-card:hover { background: var(--glass-bg-hover); border-color: var(--glass-border-strong); } }

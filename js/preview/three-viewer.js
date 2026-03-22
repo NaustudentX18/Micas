@@ -174,6 +174,12 @@ const ThreeViewer = {
     if (this.controls) { this.controls.target.set(0, 0, 0); this.controls.update(); }
   },
 
+  setMaterialColor(hexColor) {
+    if (this.currentMesh3D && THREE) {
+      this.currentMesh3D.material.color.set(hexColor);
+    }
+  },
+
   dispose() {
     if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
     this._resizeObserver?.disconnect();

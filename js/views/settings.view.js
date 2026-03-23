@@ -237,6 +237,7 @@ const settingsView = {
           <div class="select-wrapper">
             <select class="input input-select" id="default-printer">
               <option value="bambu-x1c" ${(settings.defaultPrinter || 'bambu-x1c') === 'bambu-x1c' ? 'selected' : ''}>Bambu X1C</option>
+              <option value="bambu-p1s" ${(settings.defaultPrinter || 'bambu-x1c') === 'bambu-p1s' ? 'selected' : ''}>Bambu P1S (AMS · Enclosed)</option>
               <option value="prusa-mk4"  ${(settings.defaultPrinter || 'bambu-x1c') === 'prusa-mk4'  ? 'selected' : ''}>Prusa MK4</option>
               <option value="ender-3"    ${(settings.defaultPrinter || 'bambu-x1c') === 'ender-3'    ? 'selected' : ''}>Ender 3</option>
               <option value="voron-24"   ${(settings.defaultPrinter || 'bambu-x1c') === 'voron-24'   ? 'selected' : ''}>Voron 2.4</option>

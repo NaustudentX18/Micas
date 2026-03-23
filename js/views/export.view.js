@@ -9,7 +9,8 @@ import projectsStore from '../db/projects.store.js';
 import { MATERIALS, estimatePrintTime, estimateCost, fmtPrintTime } from '/js/utils/materials.js';
 
 const PRINTER_PROFILES = [
-  { id: 'bambu-x1c',  name: 'Bambu X1C',    spec: '256×256×256 mm · 0.05–0.35 mm', speed: 100 },
+  { id: 'bambu-x1c',  name: 'Bambu X1C',    spec: '256×256×256 mm · 0.05–0.35 mm · 500 mm/s', speed: 100 },
+  { id: 'bambu-p1s',  name: 'Bambu P1S',    spec: '256×256×256 mm · 0.05–0.35 mm · AMS · Enclosed', speed: 100 },
   { id: 'prusa-mk4',  name: 'Prusa MK4',    spec: '250×210×220 mm · 0.05–0.35 mm', speed: 60 },
   { id: 'ender-3',    name: 'Ender 3',       spec: '220×220×250 mm · 0.1–0.4 mm',   speed: 50 },
   { id: 'voron-24',   name: 'Voron 2.4',    spec: '350×350×350 mm · 0.1–0.5 mm',   speed: 80 },

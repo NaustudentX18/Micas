@@ -26,9 +26,9 @@ const groqProvider = {
     return navigator.onLine;
   },
 
-  async analyze(intake, answers) {
+  async analyze(intake, answers, imageAnalysis = null) {
     const key = await this._getKey();
-    const prompt = buildAnalysisPrompt(intake, answers);
+    const prompt = buildAnalysisPrompt(intake, answers, imageAnalysis);
 
     const messages = [
       {

@@ -79,6 +79,9 @@ const briefView = {
     const isAI = provider !== 'rule-based';
 
     const dimEntries = Object.entries(cadBrief?.dimensions || {}).filter(([,v]) => v != null && typeof v === 'number');
+    const photos = state.get('intake')?.photos || [];
+    const hasPhotos = photos.length > 0;
+    const imageAnalysisProvider = state.get('imageAnalysisProvider');
 
     container.innerHTML = `
       <div class="page page-enter">
@@ -105,6 +108,22 @@ const briefView = {
             <div class="text-sm text-success mt-3">✓ Confidence threshold met — ready to generate</div>
           `}
         </div>
+
+        ${hasPhotos ? `
+          <div class="glass-panel p-4 mb-4">
+            <div class="flex-between mb-3">
+              <h4>Reference Photos</h4>
+              <span class="badge badge-ai" style="font-size:0.65rem">✦ Vision Analyzed</span>
+            </div>
+            <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px">
+              ${photos.map(p => `
+                <div style="flex-shrink:0;width:80px;height:80px;border-radius:10px;overflow:hidden;border:1px solid var(--glass-border)">
+                  <img src="${p.dataUrl}" alt="reference" style="width:100%;height:100%;object-fit:cover;display:block">
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
 
         <!-- Brief details -->
         <div class="glass-panel p-5 mb-4">

@@ -55,13 +55,13 @@ const ollamaProvider = {
     return (data.models || []).map(m => m.name);
   },
 
-  async analyze(intake, answers) {
+  async analyze(intake, answers, imageAnalysis = null) {
     // Confirm actually available before trying
     const ok = await this._checkAvailable();
     if (!ok) throw new Error('Ollama is not running at localhost:11434 — install from ollama.com');
 
     const model = await this._getModel();
-    const prompt = buildAnalysisPrompt(intake, answers);
+    const prompt = buildAnalysisPrompt(intake, answers, imageAnalysis);
 
     const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
       method: 'POST',

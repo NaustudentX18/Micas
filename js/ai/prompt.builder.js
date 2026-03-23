@@ -2,7 +2,7 @@
  * Constructs structured prompts for AI analysis.
  */
 
-export function buildAnalysisPrompt(intake, answers) {
+export function buildAnalysisPrompt(intake, answers, imageAnalysis = null) {
   const measurements = Object.entries(intake.measurements || {})
     .filter(([, v]) => v != null && v !== '')
     .map(([k, v]) => `  ${k}: ${v}mm`)
@@ -12,7 +12,32 @@ export function buildAnalysisPrompt(intake, answers) {
     ? answers.map(a => `  ${a.questionId}: ${JSON.stringify(a.value)}`).join('\n')
     : '  (no questions answered)';
 
-  const hasPhotos = (intake.photos || []).length > 0;
+  const photoCount = (intake.photos || []).length;
+  const hasPhotos = photoCount > 0;
+
+  let photoSection = '';
+  if (hasPhotos && imageAnalysis) {
+    photoSection = `## REFERENCE PHOTO ANALYSIS (${photoCount} photo${photoCount !== 1 ? 's' : ''})
+The following analysis was extracted from the reference photos provided by the user.
+Use this information as ground truth for shape, dimensions, and features:
+
+${imageAnalysis}
+
+IMPORTANT: The photo analysis above is more reliable than assumptions. Prioritize these observations when setting dimensions, features, and geometry.
+`;
+  } else if (hasPhotos) {
+    photoSection = `## REFERENCE PHOTOS
+${photoCount} reference photo${photoCount !== 1 ? 's' : ''} ${photoCount !== 1 ? 'have' : 'has'} been provided with this request.
+Analyze them carefully to extract:
+- Exact or approximate dimensions (use any visible scale references)
+- Overall shape, geometry, and cross-sections
+- Holes, slots, threads, mounting features, flanges
+- How this part mates with other components
+- Existing materials that inform the print material choice
+
+Let the photos directly inform your dimension estimates and confidence score. If you can clearly see the part's geometry from photos, your confidence should be higher.
+`;
+  }
 
   return `You are a precision CAD engineering assistant helping design 3D-printable parts.
 
@@ -27,16 +52,13 @@ ${measurements}
 ## ANSWERED QUESTIONS
 ${answersText}
 
-${hasPhotos ? `## PHOTOS
-${intake.photos.length} photo(s) have been provided with this request. Use them to understand the physical context, shape references, and scale.
-` : ''}
-
+${photoSection}
 ## YOUR TASK
 Produce a JSON object with EXACTLY this structure. Do not add or remove fields:
 
 {
   "object_type": "<brief name of what this part is>",
-  "recommended_generator": "<one of: box | bracket | spacer | organizer | phone-stand | enclosure | adapter | custom | gear | threaded-connector | hinge | snap-fit>",
+  "recommended_generator": "<one of: box | bracket | spacer | organizer | phone-stand | enclosure | adapter | custom | gear | threaded-connector | hinge | snap-fit | cable-clip | fan-guard | mounting-plate | shelf-bracket | cable-channel | pulley>",
   "dimensions": {
     "width": <number in mm or null>,
     "depth": <number in mm or null>,
@@ -64,6 +86,7 @@ Produce a JSON object with EXACTLY this structure. Do not add or remove fields:
 
 ## RULES
 - NEVER guess silently — list ALL assumptions
+- If reference photos were provided and analyzed, use that data to boost confidence
 - If confidence < 80, add to missing_info what would raise it
 - Prefer simple, printable geometry
 - All dimensions in millimeters

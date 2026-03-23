@@ -23,18 +23,18 @@ const geminiProvider = {
     return navigator.onLine;
   },
 
-  async analyze(intake, answers) {
+  async analyze(intake, answers, imageAnalysis = null) {
     const key = await this._getKey();
     if (!key) {
       throw new Error('Google Gemini API key not set — get a free key at aistudio.google.com');
     }
 
-    const prompt = buildAnalysisPrompt(intake, answers);
+    const prompt = buildAnalysisPrompt(intake, answers, imageAnalysis);
 
     // Build multimodal content parts
     const parts = [
       {
-        text: `You are a professional mechanical engineer and FDM 3D printing expert.\n\nAnalyze these design requirements and respond with ONLY a valid JSON object.\n\n${prompt}\n\nRespond ONLY with JSON. No markdown. No explanation. The JSON must include: object_type, recommended_generator, material, fit_tolerance, dimensions (with width/depth/height in mm), confidence (0-100 integer), assumptions (string array), missing_info (string array), reasoning (string).`
+        text: `You are a professional mechanical engineer and FDM 3D printing expert specializing in 3D-printable part design.\n\nAnalyze these design requirements carefully — including any reference photos provided — and respond with ONLY a valid JSON object.\n\n${prompt}\n\nIf photos are attached, examine them in detail: extract visible dimensions using scale references, note holes/features/surface details, and let the photos significantly inform your dimension estimates and confidence score. Respond ONLY with valid JSON — no markdown, no text outside the JSON.`
       }
     ];
 
@@ -42,7 +42,7 @@ const geminiProvider = {
     if (intake.photos?.length) {
       for (const img of intake.photos.slice(0, 4)) {
         // dataUrl format: "data:image/jpeg;base64,..."
-        const [meta, b64] = img.split(',');
+        const [meta, b64] = img.dataUrl.split(',');
         const mimeType = meta.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
         parts.push({ inlineData: { mimeType, data: b64 } });
       }

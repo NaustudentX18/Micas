@@ -10,6 +10,7 @@ import { haptic, scrollInputIntoView } from '../utils/mobile.js';
 const questionsView = {
   _currentQuestion: null,
   _engine: null,
+  _skipped: 0,
 
   async mount(container, { id }) {
     state.set('currentProjectId', id);
@@ -17,6 +18,7 @@ const questionsView = {
     const answers = state.get('answers') || [];
 
     this._engine = Object.create(engine);
+    this._skipped = 0;
     this._engine.init(intake, answers);
 
     this._renderQuestion(container, id);
@@ -51,7 +53,7 @@ const questionsView = {
           <div class="progress-bar">
             <div class="progress-fill" style="width:${pct}%"></div>
           </div>
-          <p class="text-xs text-dim mt-2">${progress.answered} of ~${progress.total} answered</p>
+          <p class="text-xs text-dim mt-2">${progress.answered} of ~${progress.total} answered${this._skipped > 0 ? ` · ${this._skipped} skipped` : ''}</p>
         </div>
 
         <div class="glass-panel p-5 mb-5" id="question-card">
@@ -64,11 +66,19 @@ const questionsView = {
 
           ${!isSelectType ? `
             <div class="flex gap-3 mt-5">
-              <button class="btn btn-primary flex-1 btn-lg" id="answer-btn">Next</button>
-              <button class="btn btn-glass" id="skip-btn">Skip</button>
+              <button class="btn btn-primary flex-1 btn-lg" id="answer-btn">Next →</button>
+              <button class="btn btn-glass" id="skip-btn" title="Skip this question — you can answer it later or let the AI make its best guess">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                Skip
+              </button>
             </div>
           ` : `
-            <button class="btn btn-glass btn-sm mt-4" id="skip-btn" style="align-self:flex-start">Skip this question</button>
+            <div class="mt-4">
+              <button class="btn btn-glass btn-sm" id="skip-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                Skip — I don't know
+              </button>
+            </div>
           `}
         </div>
 
@@ -205,7 +215,9 @@ const questionsView = {
   },
 
   _submitAnswer(container, projectId, skip) {
-    if (!skip) {
+    if (skip) {
+      this._skipped++;
+    } else {
       const value = this._getAnswerValue(container);
       if (value === null || value === '') {
         toast.warning('Please answer or tap Skip.');

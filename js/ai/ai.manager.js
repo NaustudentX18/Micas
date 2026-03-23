@@ -5,6 +5,7 @@ import openrouterProvider from './openrouter.provider.js';
 import groqProvider from './groq.provider.js';
 import geminiProvider from './gemini.provider.js';
 import ollamaProvider from './ollama.provider.js';
+import { runVisionPreAnalysis } from './vision.analyzer.js';
 
 /**
  * AI provider manager.
@@ -60,6 +61,21 @@ const aiManager = {
 
     bus.emit('ai:analysis-start', { priority });
 
+    // Pre-analyze photos with vision if photos are present
+    let imageAnalysis = null;
+    if ((intake.photos || []).length > 0) {
+      try {
+        const visionResult = await runVisionPreAnalysis(intake.photos);
+        imageAnalysis = visionResult.analysis;
+        if (imageAnalysis) {
+          bus.emit('ai:vision-complete', { provider: visionResult.provider });
+          console.info('[AI] Vision pre-analysis complete via', visionResult.provider);
+        }
+      } catch (e) {
+        console.warn('[AI] Vision pre-analysis failed:', e.message);
+      }
+    }
+
     let lastError = null;
     let lastProviderAttempted = null;
 
@@ -75,7 +91,7 @@ const aiManager = {
       lastProviderAttempted = id;
       try {
         console.info(`[AI] Trying provider: ${id}`);
-        const result = await provider.analyze(intake, answers);
+        const result = await provider.analyze(intake, answers, imageAnalysis);
         bus.emit('ai:analysis-complete', { result, provider: id });
         return { ...result, _provider: id };
       } catch (err) {

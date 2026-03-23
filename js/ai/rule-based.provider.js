@@ -141,7 +141,7 @@ const ruleBasedProvider = {
 
   isAvailable() { return true; },
 
-  async analyze(intake, answers) {
+  async analyze(intake, answers, imageAnalysis = null) {
     const description = intake.description || '';
     const measurements = intake.measurements || {};
 

@@ -3,11 +3,11 @@ import toast from './toast.component.js';
 
 /**
  * Photo capture component.
- * Supports camera capture (mobile) + file picker.
+ * Supports camera capture (mobile) + file picker + drag-and-drop.
  * Manages array of photo objects: { id, dataUrl, name }
  */
 
-const MAX_PHOTOS = 5;
+const MAX_PHOTOS = 8;
 
 function uid() {
   return Math.random().toString(36).slice(2, 9);
@@ -31,9 +31,9 @@ const photoCapture = {
           ${photos.length < MAX_PHOTOS ? `
             <div class="photo-add-btn" id="photo-add-trigger" role="button" tabindex="0" aria-label="Add photo">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M9 3H5a2 2 0 0 0-2 2v4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/><path d="M15 21h4a2 2 0 0 0 2-2v-4"/></svg>
-              <span>Add photo</span>
+              <span>${photos.length === 0 ? 'Add photos' : 'Add more'}</span>
             </div>
-            <input type="file" id="photo-file-input" accept="image/*" capture="environment" multiple style="display:none" aria-hidden="true">
+            <input type="file" id="photo-file-input" accept="image/*,.heic,.heif" multiple style="display:none" aria-hidden="true">
           ` : ''}
         </div>
       `;
@@ -78,6 +78,34 @@ const photoCapture = {
         onChange(photos);
         input.value = '';
       });
+
+      // Drag-and-drop support
+      const grid = container.querySelector('[id^="photo-grid-"]');
+      if (grid) {
+        grid.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          grid.style.opacity = '0.7';
+        });
+        grid.addEventListener('dragleave', () => {
+          grid.style.opacity = '';
+        });
+        grid.addEventListener('drop', async (e) => {
+          e.preventDefault();
+          grid.style.opacity = '';
+          const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/'));
+          const remaining = MAX_PHOTOS - photos.length;
+          const toProcess = files.slice(0, remaining);
+          for (const file of toProcess) {
+            try {
+              let dataUrl = await readFileAsDataURL(file);
+              dataUrl = await resizeImage(dataUrl, 1280);
+              photos.push({ id: uid(), dataUrl, name: file.name });
+            } catch { /* skip */ }
+          }
+          render(container);
+          onChange(photos);
+        });
+      }
     }
 
     return {

@@ -8,8 +8,8 @@ import { buildAnalysisPrompt } from './prompt.builder.js';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-function buildMessages(intake, answers, model) {
-  const textPrompt = buildAnalysisPrompt(intake, answers);
+function buildMessages(intake, answers, model, imageAnalysis) {
+  const textPrompt = buildAnalysisPrompt(intake, answers, imageAnalysis);
   const photos = (intake.photos || []).slice(0, 3); // limit to 3 photos
 
   // Vision-capable models
@@ -63,7 +63,7 @@ const openrouterProvider = {
     return !!sessionStorage.getItem('or_key_cached');
   },
 
-  async analyze(intake, answers) {
+  async analyze(intake, answers, imageAnalysis = null) {
     const [apiKey, model] = await Promise.all([
       settingsStore.get('openrouterApiKey'),
       settingsStore.get('openrouterModel')
@@ -75,7 +75,7 @@ const openrouterProvider = {
     // Cache key availability for sync check
     sessionStorage.setItem('or_key_cached', '1');
 
-    const messages = buildMessages(intake, answers, model || 'anthropic/claude-3-haiku');
+    const messages = buildMessages(intake, answers, model || 'anthropic/claude-3-haiku', imageAnalysis);
 
     const resp = await fetch(OPENROUTER_URL, {
       method: 'POST',

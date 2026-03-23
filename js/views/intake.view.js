@@ -27,9 +27,16 @@ const intake = {
 
         <!-- Photo capture -->
         <div class="page-section">
-          <div class="page-section-title">Reference Photos
-            <span class="badge badge-muted" style="margin-left:6px;vertical-align:middle;font-size:0.65rem">optional</span>
+          <div class="flex-between mb-3">
+            <div class="page-section-title" style="margin-bottom:0">
+              Reference Photos
+              <span class="badge badge-muted" style="margin-left:6px;vertical-align:middle;font-size:0.65rem">optional</span>
+            </div>
+            <span class="badge badge-ai" style="font-size:0.65rem">✦ AI Vision</span>
           </div>
+          <p class="text-xs text-muted mb-3" style="line-height:1.5">
+            Upload photos of what you want to build or reference objects. The AI will extract shapes, dimensions, hole patterns, and features directly from the images — even without measurements.
+          </p>
           <div id="photo-container"></div>
         </div>
 

@@ -35,7 +35,7 @@ const intake = {
             <span class="badge badge-ai" style="font-size:0.65rem">✦ AI Vision</span>
           </div>
           <p class="text-xs text-muted mb-3" style="line-height:1.5">
-            Upload photos of what you want to build or reference objects. The AI will extract shapes, dimensions, hole patterns, and features directly from the images — even without measurements.
+            Add photos, screenshots, or saved images — from your gallery, files app, or paste from clipboard. The AI analyzes both physical objects and 2D reference images to extract shapes, dimensions, features, and design intent.
           </p>
           <div id="photo-container"></div>
         </div>
@@ -136,9 +136,10 @@ const intake = {
     `;
 
     // Photo capture
-    const pc = photoCapture.create(existing.photos || [], (photos) => {
+    this._pc = photoCapture.create(existing.photos || [], (photos) => {
       state.set('intake.photos', photos);
     });
+    const pc = this._pc;
     pc.mount(container.querySelector('#photo-container'));
 
     // Scroll-into-view on input focus (iOS keyboard avoidance)
@@ -214,7 +215,9 @@ const intake = {
     });
   },
 
-  unmount() {}
+  unmount() {
+    if (this._pc) { this._pc.destroy(); this._pc = null; }
+  }
 };
 
 export default intake;

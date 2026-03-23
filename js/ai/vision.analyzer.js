@@ -8,20 +8,36 @@ import settingsStore from '../db/settings.store.js';
 
 const GEMINI_VISION_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
-const VISION_PROMPT = `You are analyzing reference photos to help design a 3D-printable part.
+const VISION_PROMPT = `You are a mechanical engineer analyzing reference images to extract design information for a 3D-printable part.
 
-Examine these photos carefully and extract:
-1. SHAPE & GEOMETRY: Describe the overall shape, cross-sections, and geometry
-2. VISIBLE DIMENSIONS: Estimate dimensions from any visible references (hands, rulers, common objects)
-3. SURFACE FEATURES: Holes, slots, threads, ribs, flanges, cutouts, tabs
-4. CONNECTIONS: How the part connects/mates with other components
-5. MATERIAL CLUES: Existing material (metal, plastic, rubber) to inform print material choice
-6. SCALE CONTEXT: Any objects in the photo that give scale reference
+First, determine what kind of image this is:
+- TYPE A: Photo of a physical object (real product, existing part, object to replicate or mount)
+- TYPE B: 2D reference image (screenshot, diagram, sketch, blueprint, CAD render, product listing image, drawing)
 
-Be specific and quantitative where possible. Say "approximately 50mm wide" not "medium sized".
-Describe the part as if explaining it to an engineer who cannot see the photos.
+Then extract all available design information based on the type:
 
-Return a concise structured analysis. Do NOT include JSON — just clear paragraphs.`;
+FOR TYPE A (physical object photo):
+1. SHAPE & GEOMETRY: Overall form, cross-sections, symmetry
+2. DIMENSIONS: Estimate from visible scale cues — hands (~80mm wide), coins, credit cards (85×54mm), common objects, rulers if present. Give mm estimates with confidence ("~40mm wide, medium confidence — estimated from hand in frame")
+3. SURFACE FEATURES: Holes, threads, slots, ribs, bosses, flanges, chamfers, fillets, snap tabs
+4. MATING INTERFACES: How the part connects — bolt holes, friction fit, snap, thread, adhesive
+5. MATERIAL CONTEXT: What the existing part is made of (guides material recommendation)
+
+FOR TYPE B (2D reference / screenshot / diagram):
+1. PROFILE & OUTLINE: Describe the 2D shape, profile, and key outlines visible
+2. ANNOTATED DIMENSIONS: Extract any numbers, dimensions, labels visible in the image
+3. FEATURES SHOWN: Holes, cutouts, slots, curves, straight edges — and their approximate positions
+4. SCALE INFERENCE: Use any grid lines, text size, UI elements, or relative sizing to estimate real-world scale
+5. DESIGN INTENT: What function does this part serve based on the diagram/screenshot?
+6. FORM FACTOR: Is this a flat part, an extrusion, a revolution (axially symmetric), or a complex 3D shape?
+
+FOR ALL IMAGES:
+- Be specific and quantitative. "~50mm wide" beats "medium sized"
+- State your confidence: "high confidence — ruler visible" or "low confidence — no scale reference"
+- Describe what you CANNOT determine as clearly as what you can
+- If a screenshot shows a product page, extract model numbers, stated dimensions, and listed specs
+
+Output: 3–6 clear paragraphs. No JSON. Write as if briefing an engineer who cannot see the images.`;
 
 /**
  * Analyze photos using Gemini vision API.

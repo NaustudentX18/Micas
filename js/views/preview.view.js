@@ -8,6 +8,7 @@ import validationPanel from '../components/validation-panel.component.js';
 import skeleton from '../components/skeleton.component.js';
 import toast from '../components/toast.component.js';
 import { pipelineNav } from './_pipeline.js';
+import { estimatePrint, fmtPrintTime, MATERIALS, LAYER_PRESETS } from '../utils/print-estimator.js';
 import { fmtVolume, fmtMass } from '../utils/format.utils.js';
 
 const previewView = {
@@ -67,6 +68,64 @@ const previewView = {
               <div class="font-semibold">${metadata.generatorId || '—'}</div>
             </div>
           </div>
+        ` : ''}
+
+        <!-- Print Estimator -->
+        ${metadata?.volume ? `
+        <div class="glass-panel p-5 mt-4" id="print-estimator">
+          <div class="flex-between mb-4">
+            <h3>Print Estimator</h3>
+            <button class="btn btn-glass btn-sm" id="est-toggle">Hide</button>
+          </div>
+          <div id="est-body">
+            <div class="grid-2 gap-3 mb-4">
+              <div class="form-group mb-0">
+                <label class="form-label">Material</label>
+                <div class="select-wrapper">
+                  <select class="input input-select" id="est-material">
+                    ${Object.entries(MATERIALS).map(([k, m]) =>
+                      `<option value="${k}">${m.label}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+              <div class="form-group mb-0">
+                <label class="form-label">Layer Height</label>
+                <div class="select-wrapper">
+                  <select class="input input-select" id="est-layer">
+                    ${LAYER_PRESETS.map(p =>
+                      `<option value="${p.value}" ${p.value === 0.20 ? 'selected' : ''}>${p.label}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="form-group mb-4">
+              <label class="form-label flex-between">
+                <span>Infill</span>
+                <span id="est-infill-val" class="text-accent font-semibold">20%</span>
+              </label>
+              <input type="range" class="est-slider" id="est-infill"
+                min="5" max="100" step="5" value="20">
+              <div class="flex-between text-xs text-dim mt-1">
+                <span>5% — Hollow</span><span>50% — Solid feel</span><span>100% — Solid</span>
+              </div>
+            </div>
+            <div class="est-results">
+              <div class="est-card">
+                <div class="est-label">Filament Used</div>
+                <div class="est-value" id="est-weight">—</div>
+                <div class="est-sub" id="est-length">—</div>
+              </div>
+              <div class="est-card">
+                <div class="est-label">Est. Print Time</div>
+                <div class="est-value" id="est-time">—</div>
+                <div class="est-sub" id="est-cost">—</div>
+              </div>
+            </div>
+            <p class="text-xs text-dim mt-3" style="text-align:center">
+              Estimates assume 0.4 mm nozzle · 80 mm/s · 2 perimeters · prices at $22–40/kg
+            </p>
+          </div>
+        </div>
         ` : ''}
 
         <!-- Validation -->
@@ -132,6 +191,48 @@ const previewView = {
           <p class="text-muted">No model generated yet. Go back to Generator.</p>
         </div>
       `;
+    }
+
+    // Print estimator — live calculation
+    if (metadata?.volume) {
+      const updateEstimate = () => {
+        const mat     = container.querySelector('#est-material')?.value || 'PLA';
+        const infill  = parseInt(container.querySelector('#est-infill')?.value || '20');
+        const layer   = parseFloat(container.querySelector('#est-layer')?.value || '0.20');
+        const infillLabel = container.querySelector('#est-infill-val');
+        if (infillLabel) infillLabel.textContent = `${infill}%`;
+
+        const { weightG, filamentLengthM, printTimeMin, costUsd } = estimatePrint({
+          volumeMm3: metadata.volume,
+          infillPct: infill,
+          layerHeightMm: layer,
+          material: mat,
+        });
+
+        const wEl = container.querySelector('#est-weight');
+        const lEl = container.querySelector('#est-length');
+        const tEl = container.querySelector('#est-time');
+        const cEl = container.querySelector('#est-cost');
+        if (wEl) wEl.textContent = weightG < 10 ? `${weightG.toFixed(1)} g` : `${Math.round(weightG)} g`;
+        if (lEl) lEl.textContent = `${filamentLengthM.toFixed(1)} m filament`;
+        if (tEl) tEl.textContent = fmtPrintTime(printTimeMin);
+        if (cEl) cEl.textContent = `~$${costUsd.toFixed(2)} material cost`;
+      };
+
+      ['#est-material', '#est-layer', '#est-infill'].forEach(sel => {
+        container.querySelector(sel)?.addEventListener('input', updateEstimate);
+        container.querySelector(sel)?.addEventListener('change', updateEstimate);
+      });
+      updateEstimate();
+
+      // Collapse/expand toggle
+      container.querySelector('#est-toggle')?.addEventListener('click', (e) => {
+        const body = container.querySelector('#est-body');
+        const btn  = e.currentTarget;
+        const hidden = body.style.display === 'none';
+        body.style.display = hidden ? '' : 'none';
+        btn.textContent = hidden ? 'Hide' : 'Show';
+      });
     }
 
     // Run validation in background

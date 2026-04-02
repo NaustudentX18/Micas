@@ -55,6 +55,30 @@ const ollamaProvider = {
     return (data.models || []).map(m => m.name);
   },
 
+  async callWithPrompt(promptText) {
+    const ok = await this._checkAvailable();
+    if (!ok) throw new Error('Ollama is not running at localhost:11434');
+    const model = await this._getModel();
+    const res = await fetch(`${OLLAMA_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: 'You are a professional mechanical engineer and FDM 3D printing expert. Respond ONLY with a JSON object.' },
+          { role: 'user', content: promptText }
+        ],
+        stream: false,
+        format: 'json'
+      })
+    });
+    if (!res.ok) throw new Error(`Ollama error ${res.status}`);
+    const data = await res.json();
+    const content = data.message?.content || data.response || '';
+    if (!content) throw new Error('Empty Ollama response');
+    return this._parseResult(content);
+  },
+
   async analyze(intake, answers) {
     // Confirm actually available before trying
     const ok = await this._checkAvailable();

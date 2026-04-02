@@ -138,6 +138,20 @@ const exportView = {
           </button>
         </div>
 
+        <!-- Share Design -->
+        <div class="page-section-title">Share</div>
+        <div class="glass-panel p-5 mb-4">
+          <div class="flex gap-3 items-start">
+            <span style="font-size:1.4rem;flex-shrink:0">🔗</span>
+            <div class="flex-1">
+              <div class="font-semibold mb-1">Share This Design</div>
+              <p class="text-sm text-muted mb-3">Generate a link anyone can open to instantly load and regenerate this exact part with the same parameters.</p>
+              <button class="btn btn-glass btn-full" id="share-btn">Copy Share Link</button>
+              <div id="share-confirm" class="text-xs text-success mt-2 hidden">✓ Link copied to clipboard!</div>
+            </div>
+          </div>
+        </div>
+
         <div class="flex gap-3 mt-6">
           <button class="btn btn-glass btn-full" id="back-preview-btn">← Back to Preview</button>
           <button class="btn btn-glass btn-full" id="new-project-btn">New Project</button>
@@ -202,6 +216,42 @@ const exportView = {
         const name = exportManager.exportConfidenceSummary(analysisResult, answers, partName);
         toast.success(`Downloaded: ${name}`);
       } catch (e) { toast.error('Export failed: ' + e.message); }
+    });
+
+    // Share design link
+    on('#share-btn', () => {
+      const genId = state.get('selectedPartType');
+      if (!genId || !params) { toast.warning('Generate a model first'); return; }
+
+      const sharePayload = {
+        v: 1,                                       // schema version
+        g: genId,                                   // generator id
+        p: params,                                  // generator params
+        b: {
+          object_type:           brief?.object_type || '',
+          material_recommendation: brief?.material_recommendation || 'PLA',
+          dimensions:            brief?.dimensions || {},
+        },
+      };
+
+      try {
+        const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(sharePayload))));
+        const url = `${location.origin}${location.pathname}#/share?d=${encoded}`;
+
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(url).then(() => {
+            const confirm = container.querySelector('#share-confirm');
+            confirm?.classList.remove('hidden');
+            setTimeout(() => confirm?.classList.add('hidden'), 3000);
+          }).catch(() => {
+            prompt('Copy this share link:', url);
+          });
+        } else {
+          prompt('Copy this share link:', url);
+        }
+      } catch(e) {
+        toast.error('Failed to create share link');
+      }
     });
 
     on('#back-preview-btn', () => router.navigate(`/project/${id}/preview`));

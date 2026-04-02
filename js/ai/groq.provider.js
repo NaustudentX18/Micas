@@ -26,6 +26,27 @@ const groqProvider = {
     return navigator.onLine;
   },
 
+  async callWithPrompt(promptText) {
+    const key = await this._getKey();
+    let endpoint = GROQ_ENDPOINT;
+    let headers = { 'Content-Type': 'application/json' };
+    if (key) { headers['Authorization'] = `Bearer ${key}`; }
+    else if (PROXY_ENDPOINT) { endpoint = PROXY_ENDPOINT; headers['X-Provider'] = 'groq'; }
+    else throw new Error('No Groq key or proxy configured');
+
+    const body = { model: GROQ_MODEL, messages: [
+      { role: 'system', content: 'You are a professional mechanical engineer and FDM 3D printing expert. Respond with valid JSON only.' },
+      { role: 'user', content: promptText }
+    ], temperature: 0.2, max_tokens: 1800, response_format: { type: 'json_object' } };
+
+    const res = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify(key ? body : { ...body, provider: 'groq' }) });
+    if (!res.ok) throw new Error(`Groq error ${res.status}`);
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error('Empty Groq response');
+    return this._parseResult(content);
+  },
+
   async analyze(intake, answers) {
     const key = await this._getKey();
     const prompt = buildAnalysisPrompt(intake, answers);

@@ -23,6 +23,7 @@ router.register('/project/:id/generator',       () => import('./views/generator.
 router.register('/project/:id/preview',         () => import('./views/preview.view.js'));
 router.register('/project/:id/export',          () => import('./views/export.view.js'));
 router.register('/settings',                    () => import('./views/settings.view.js'));
+router.register('/share',                       () => import('./views/share.view.js'));
 
 // Mount nav
 import('./components/nav.component.js').then(m => {

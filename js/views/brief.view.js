@@ -144,6 +144,29 @@ const briefView = {
         <!-- Assumptions panel -->
         <div id="assumptions-wrap"></div>
 
+        <!-- AI Refinement Chat -->
+        ${isAI ? `
+        <div class="glass-panel p-5 mt-4" id="refine-panel">
+          <div class="flex gap-2 items-center mb-3">
+            <span style="font-size:1.2rem">✦</span>
+            <h3 style="margin:0">Refine with AI</h3>
+          </div>
+          <p class="text-sm text-muted mb-3">
+            Not quite right? Describe what you'd like to change and the AI will update the brief.
+          </p>
+          <div class="flex gap-2">
+            <input class="input flex-1" type="text" id="refine-input"
+              placeholder="e.g. make it 20mm taller, add snap clips, use PETG…"
+              autocomplete="off" enterkeyhint="done">
+            <button class="btn btn-primary btn-sm" id="refine-btn" style="flex-shrink:0">
+              <span id="refine-spinner" class="spinner spinner-sm hidden"></span>
+              <span id="refine-label">Refine</span>
+            </button>
+          </div>
+          <div id="refine-history" class="mt-3"></div>
+        </div>
+        ` : ''}
+
         <!-- Actions -->
         <div class="flex gap-3 mt-6 flex-col">
           <button class="btn btn-primary btn-lg btn-full" id="generate-btn">
@@ -178,6 +201,94 @@ const briefView = {
     container.querySelector('#back-btn').addEventListener('click', () => {
       router.navigate(`/project/${projectId}/intake`);
     });
+
+    // AI Refinement chat
+    if (isAI) {
+      let currentBrief = cadBrief;
+      const historyEl  = container.querySelector('#refine-history');
+      const input      = container.querySelector('#refine-input');
+      const btn        = container.querySelector('#refine-btn');
+      const spinner    = container.querySelector('#refine-spinner');
+      const label      = container.querySelector('#refine-label');
+
+      const addHistoryEntry = (feedback, ok) => {
+        const entry = document.createElement('div');
+        entry.className = 'refine-entry';
+        entry.innerHTML = `
+          <span class="refine-icon">${ok ? '✓' : '✗'}</span>
+          <span class="refine-text text-sm">${feedback}</span>
+        `;
+        historyEl.appendChild(entry);
+      };
+
+      const doRefine = async () => {
+        const feedback = input.value.trim();
+        if (!feedback) return;
+
+        btn.disabled = true;
+        spinner.classList.remove('hidden');
+        label.textContent = 'Refining…';
+        input.disabled = true;
+
+        try {
+          const result = await aiManager.refine(currentBrief, feedback);
+          currentBrief = result.cadBrief;
+
+          // Update state
+          state.set('brief', result.cadBrief);
+          state.set('confidence', result.confidence);
+          state.set('assumptions', result.assumptions);
+
+          // Save to DB
+          const partId = state.get('currentPartId');
+          if (partId) {
+            await partsStore.update(partId, {
+              brief: result.cadBrief,
+              confidence: result.confidence,
+              assumptions: result.assumptions,
+            }).catch(() => {});
+          }
+
+          addHistoryEntry(feedback, true);
+          toast.success('Brief updated!');
+
+          // Re-render the brief details in-place
+          this._updateBriefDetails(container, result.cadBrief, result.confidence);
+
+          input.value = '';
+        } catch (e) {
+          addHistoryEntry(feedback, false);
+          toast.error('Refinement failed: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          spinner.classList.add('hidden');
+          label.textContent = 'Refine';
+          input.disabled = false;
+          input.focus();
+        }
+      };
+
+      btn.addEventListener('click', doRefine);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') doRefine(); });
+    }
+  },
+
+  _updateBriefDetails(container, brief, confidence) {
+    // Update part summary rows
+    const dimEntries = Object.entries(brief?.dimensions || {}).filter(([,v]) => v != null && typeof v === 'number');
+    const summaryPanel = container.querySelector('.glass-panel h3')?.closest('.glass-panel');
+    if (summaryPanel) {
+      summaryPanel.querySelector('.info-row:nth-child(1) .info-row-value').textContent = brief?.object_type || '—';
+      summaryPanel.querySelector('.info-row:nth-child(2) .info-row-value').textContent = brief?.recommended_generator || '—';
+      summaryPanel.querySelector('.info-row:nth-child(3) .info-row-value').textContent = brief?.material_recommendation || 'PLA';
+      summaryPanel.querySelector('.info-row:nth-child(4) .info-row-value').textContent = brief?.tolerances?.fit || 'standard';
+    }
+    // Re-render confidence meter
+    const meterEl = container.querySelector('#conf-meter');
+    if (meterEl) {
+      const { default: cm } = { default: { render: () => {} } };
+      import('../components/confidence-meter.component.js').then(m => m.default.render(meterEl, confidence));
+    }
   },
 
   unmount() {}

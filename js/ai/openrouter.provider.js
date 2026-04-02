@@ -63,6 +63,36 @@ const openrouterProvider = {
     return !!sessionStorage.getItem('or_key_cached');
   },
 
+  async callWithPrompt(promptText) {
+    const [apiKey, model] = await Promise.all([
+      settingsStore.get('openrouterApiKey'),
+      settingsStore.get('openrouterModel')
+    ]);
+    if (!apiKey) throw new Error('No OpenRouter API key configured');
+
+    const resp = await fetch(OPENROUTER_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'Micas CAD',
+      },
+      body: JSON.stringify({
+        model: model || 'anthropic/claude-3-5-haiku',
+        messages: [{ role: 'user', content: promptText }],
+        max_tokens: 1500,
+        temperature: 0.3,
+      })
+    });
+    if (!resp.ok) throw new Error(`OpenRouter ${resp.status}`);
+    const data = await resp.json();
+    const text = data.choices?.[0]?.message?.content;
+    if (!text) throw new Error('Empty response');
+    const cadBrief = parseResponse(text);
+    return { cadBrief, confidence: cadBrief.confidence ?? 70, assumptions: cadBrief.assumptions ?? [], missingInfo: cadBrief.missing_info ?? [], reasoning: cadBrief.reasoning ?? '', provider: 'openrouter' };
+  },
+
   async analyze(intake, answers) {
     const [apiKey, model] = await Promise.all([
       settingsStore.get('openrouterApiKey'),

@@ -23,6 +23,24 @@ const geminiProvider = {
     return navigator.onLine;
   },
 
+  async callWithPrompt(promptText) {
+    const key = await this._getKey();
+    if (!key) throw new Error('Gemini API key not set');
+    const res = await fetch(`${GEMINI_ENDPOINT}?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: promptText }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 2000, responseMimeType: 'application/json' }
+      })
+    });
+    if (!res.ok) throw new Error(`Gemini error ${res.status}`);
+    const data = await res.json();
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!content) throw new Error('Empty Gemini response');
+    return this._parseResult(content);
+  },
+
   async analyze(intake, answers) {
     const key = await this._getKey();
     if (!key) {

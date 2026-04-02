@@ -5,6 +5,7 @@ import openrouterProvider from './openrouter.provider.js';
 import groqProvider from './groq.provider.js';
 import geminiProvider from './gemini.provider.js';
 import ollamaProvider from './ollama.provider.js';
+import { buildClarificationPrompt } from './prompt.builder.js';
 
 /**
  * AI provider manager.
@@ -114,6 +115,40 @@ const aiManager = {
     chain.push('rule-based');
 
     return chain;
+  },
+
+  /**
+   * Refine an existing CAD brief with natural-language feedback.
+   * Tries network providers in priority order; falls back to error if none available.
+   * @param {object} currentBrief  - The current cadBrief object
+   * @param {string} feedback      - User's refinement request (free text)
+   * @returns {Promise<AnalysisResult>}
+   */
+  async refine(currentBrief, feedback) {
+    const prompt = buildClarificationPrompt(currentBrief, feedback);
+    const openrouterKey = await settingsStore.get('openrouterApiKey');
+    const geminiKey     = await settingsStore.get('geminiApiKey');
+    const groqKey       = await settingsStore.get('groqApiKey');
+    const priority      = this._buildNetworkChain(openrouterKey, geminiKey, groqKey)
+      .filter(id => id !== 'rule-based'); // rule-based can't refine
+
+    bus.emit('ai:analysis-start', { priority, mode: 'refine' });
+    let lastError = null;
+
+    for (const id of priority) {
+      const provider = registry.get(id);
+      if (!provider?.isAvailable() || !provider.callWithPrompt) continue;
+      try {
+        const result = await provider.callWithPrompt(prompt);
+        bus.emit('ai:analysis-complete', { result, provider: id, mode: 'refine' });
+        return { ...result, _provider: id };
+      } catch (err) {
+        console.warn(`[AI] Refine failed for ${id}:`, err.message);
+        lastError = err;
+      }
+    }
+
+    throw lastError || new Error('No AI provider available — add an API key in Settings to use refinement');
   },
 
   /** Returns status of all providers for the settings UI */
